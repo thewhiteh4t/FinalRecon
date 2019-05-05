@@ -1,0 +1,4 @@
+requests
+ipwhois
+beautifulsoup4
+lxml
