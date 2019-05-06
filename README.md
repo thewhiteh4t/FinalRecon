@@ -42,6 +42,7 @@ git clone https://github.com/thewhiteh4t/FinalRecon.git
 cd FinalRecon
 pip3 install -r requirements.txt
 ```
+
 ## Usage
 
 ```bash
@@ -61,6 +62,28 @@ optional arguments:
   --whois     Get Whois Lookup
   --crawl     Crawl Target Website
   --full      Get Full Analysis, Test All Available Options
+```
+
+```bash
+# Check headers
+
+python3 finalrecon.py --headers <url>
+
+# Check ssl Certificate
+
+python3 finalrecon.py --sslinfo <url>
+
+# Check whois Information
+
+python3 finalrecon.py --whois <url>
+
+# Crawl Target
+
+python3 finalrecon.py --crawl <url>
+
+# full scan
+
+python3 finalrecon.py --full <url>
 ```
 
 ## Demo
