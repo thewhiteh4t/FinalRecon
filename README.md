@@ -24,7 +24,7 @@ FinalRecon provides detailed information such as :
 
 ### SSL Certificate Details
 <p align="center"><img src="https://i.imgur.com/PFZm0qx.png"></p>
-<p align="center">Found Flag in SSL Certificate - Securinets CTF 2019</p>
+<p align="center">Found Flag in SSL Certificate - Securinets CTF Quals 2019 - Hidden (200 Points)</p>
 
 ### Crawler
 <p align="center"><img src="https://i.imgur.com/C8eQ8z3.png">
