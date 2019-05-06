@@ -34,6 +34,7 @@ FinalRecon provides detailed information such as :
 ## Tested on
 
 * Kali Linux 2019.1
+* BlackArch Linux
 
 ## Installation
 
