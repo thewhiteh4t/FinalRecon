@@ -8,7 +8,7 @@ from modules.crawler import crawler
 from modules.headers import headers
 from modules.whois import whois_lookup
 
-version = '1.0.0'
+version = '1.0.1'
 
 R = '\033[31m' # red
 G = '\033[32m' # green
@@ -76,7 +76,10 @@ try:
 		print (G + '[+]' + C + ' IP Address : ' + W + str(ip))
 	except Exception as e:
 		print (R + '[+]' + C + ' Unable to Get IP : ' + W + str(e))
-		pass
+		if '[Errno -2]' in str(e):
+			exit()
+		else:
+			pass
 
 	if headinfo is True:
 		headers(target)
