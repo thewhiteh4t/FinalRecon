@@ -12,7 +12,7 @@ OSINT Tool for All-In-One Web Reconnaissance
 
 <p align="center">
   <br>
-  Available in
+  <b>Available in<b>
   <br>
   <img src="https://i.imgur.com/IPiAUZi.png">
 </p>
