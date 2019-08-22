@@ -12,7 +12,7 @@ OSINT Tool for All-In-One Web Reconnaissance
 
 | Available                            | in                                   |
 |--------------------------------------|--------------------------------------|
-| ![](https://i.imgur.com/IPiAUZi.png) | ![](https://i.imgur.com/z36xL8c.png) |
+| ![](https://i.imgur.com/1wJVDV5.png) | ![](https://i.imgur.com/z36xL8c.png) |
 
 FinalRecon is a fast and simple python script for web reconnaissance. It follows a modular structure so in future new modules can be added with ease.
 
