@@ -27,6 +27,9 @@ def crawler(target):
 		if sc == 200:
 			domain = target.split('//')
 			domain = domain[1]
+			if "/" in domain:
+				domain = domain.split("/")[0]
+			base_target = target.split('//')[0] + "//" + domain
 			page = rqst.content
 			soup = bs4.BeautifulSoup(page, 'lxml')
 			file = '{}.dump'.format(domain)
@@ -50,7 +53,7 @@ def crawler(target):
 							url = url[1]
 							url = url.strip()
 							total.append(url)
-							r_total.append(target + url)
+							r_total.append(base_target + url)
 						except:
 							pass
 					elif 'Allow' in entry:
@@ -59,7 +62,7 @@ def crawler(target):
 							url = url[1]
 							url = url.strip()
 							total.append(url)
-							r_total.append(target + url)
+							r_total.append(base_target + url)
 						except:
 							pass
 				r_total = set(r_total)
@@ -147,8 +150,10 @@ def crawler(target):
 			print('\n' + G + '[+]' + C + ' Total Links Extracted : ' + W + str(len(total)) + '\n')
 
 			if len(total) is not 0:
-				print(G + '[+]' + C + ' Dumping Links in ' + W + '{}/dumps/{}'.format(path, file))
-				with open('dumps/{}'.format('{}.dump'.format(domain)), 'w') as dumpfile:
+				file = file.replace("/", ".")
+				dump_path = '{}/dumps/{}'.format(path, file)
+				print(G + '[+]' + C + ' Dumping Links in ' + W + dump_path)
+				with open(dump_path, 'w') as dumpfile:
 					dumpfile.write('URL : {}'.format(target) + '\n\n')
 					try:
 						dumpfile.write('Title : {}'.format(soup.title.string) + '\n')

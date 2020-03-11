@@ -72,6 +72,8 @@ try:
 		exit()
 
 	try:
+		if "/" in hostname:
+			hostname = hostname.split("/")[0]
 		ip = socket.gethostbyname(hostname)
 		print (G + '[+]' + C + ' IP Address : ' + W + str(ip))
 	except Exception as e:
