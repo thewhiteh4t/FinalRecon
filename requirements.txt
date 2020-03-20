@@ -6,3 +6,4 @@ dnslib
 aiohttp
 psycopg2
 tldextract
+icmplib
