@@ -8,9 +8,12 @@ R = '\033[31m' # red
 G = '\033[32m' # green
 C = '\033[36m' # cyan
 W = '\033[0m'  # white
+Y = '\033[33m' # yellow
 
-def cert(hostname):
-	print ('\n' + G + '[+]' + C + ' SSL Certificate Information : ' + W + '\n')
+def cert(hostname, output, data):
+	result = {}
+	pair = {}
+	print ('\n' + Y + '[!]' + Y + ' SSL Certificate Information : ' + W + '\n')
 
 	ctx = ssl.create_default_context()
 	s = ctx.wrap_socket(socket.socket(), server_hostname=hostname)
@@ -18,8 +21,6 @@ def cert(hostname):
 		try:
 			s.connect((hostname, 443))
 			info = s.getpeercert()
-			subject = dict(x[0] for x in info['subject'])
-			issuer = dict(y[0] for y in info['issuer'])
 		except:
 			ctx = ssl._create_unverified_context()
 			s = ctx.wrap_socket(socket.socket(), server_hostname=hostname)
@@ -30,25 +31,50 @@ def cert(hostname):
 			f.write(info)
 			f.close()
 			cert_dict = ssl._ssl._test_decode_cert('{}.pem'.format(hostname))
-			subject = dict(x[0] for x in cert_dict['subject'])
-			issuer = dict(y[0] for y in cert_dict['issuer'])
 			info = cert_dict
 			os.remove('{}.pem'.format(hostname))
-		try:
-			for k, v in subject.items():
-				print(G + '[+]' + C + ' {} : '.format(str(k)) + W + str(v))
-			for k, v in issuer.items():
-				print(G + '[+]' + C + ' {} : '.format(str(k)) + W + str(v))
-			print(G + '[+]' + C + ' Version : ' + W + str(info['version']))
-			print(G + '[+]' + C + ' Serial Number : ' + W + str(info['serialNumber']))
-			print(G + '[+]' + C + ' Not Before : ' + W + str(info['notBefore']))
-			print(G + '[+]' + C + ' Not After : ' + W + str(info['notAfter']))
-			print(G + '[+]' + C + ' OCSP : ' + W + str(info['OCSP']))
-			print(G + '[+]' + C + ' subject Alt Name : ' + W + str(info['subjectAltName']))
-			print(G + '[+]' + C + ' CA Issuers : ' + W + str(info['caIssuers']))
-			print(G + '[+]' + C + ' CRL Distribution Points : ' + W + str(info['crlDistributionPoints']))
-		except KeyError:
-			pass
+		
+		def unpack(v, pair):
+			convert = False
+			for item in v:
+				if isinstance(item, tuple):
+					for subitem in item:
+						if isinstance(subitem, tuple):
+							for elem in subitem:
+								if isinstance(elem, tuple):
+									unpack(elem)
+								else:
+									convert = True
+									pass
+							if convert == True:
+								pair.update(dict([subitem]))
+						else:
+							pass
+				else:							
+					print(G + '[+]' + C + ' {} : '.format(str(k)) + W + str(item))
+					if output != 'None':
+						result.update({k:v})
 
+		for k, v in info.items():
+			if isinstance(v, tuple):
+				unpack(v, pair)
+				for k,v in pair.items():
+					print(G + '[+]' + C + ' {} : '.format(str(k)) + W + str(v))
+					if output != 'None':
+						result.update({k:v})
+				pair.clear()
+			else:
+				print(G + '[+]' + C + ' {} : '.format(str(k)) + W + str(v))
+			if output != 'None':
+				result.update({k:v})
+		
 	except:
 		print (R + '[-]' + C + ' SSL is not Present on Target URL...Skipping...' + W)
+		if output != 'None':
+			result.update({'Error':'SSL is not Present on Target URL'})
+	
+	if output != 'None':
+		cert_output(output, data, result)
+
+def cert_output(output, data, result):
+	data['module-SSL Certificate Information'] = result

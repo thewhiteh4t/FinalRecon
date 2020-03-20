@@ -1,4 +1,8 @@
 requests
 ipwhois
-beautifulsoup4
+bs4
 lxml
+dnslib
+aiohttp
+psycopg2
+tldextract

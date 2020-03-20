@@ -1,198 +1,384 @@
 #!/usr/bin/env python3
 
 import os
+import re
 import bs4
 import lxml
+import asyncio
 import requests
+import threading
+import tldextract
+requests.packages.urllib3.disable_warnings()
 
 R = '\033[31m' # red
 G = '\033[32m' # green
 C = '\033[36m' # cyan
 W = '\033[0m'  # white
-user_agent = {'User-Agent' : 'Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0'}
+Y = '\033[33m' # yellow
 
-def crawler(target):
-	total = []
-	r_total = []
-	sm_total = []
-	js_total = []
-	css_total = []
-	int_total = []
-	ext_total = []
-	img_total = []
-	print ('\n' + G + '[+]' + C + ' Crawling Target...' + W + '\n')
+user_agent = {
+	'User-Agent' : 'Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0'
+	}
+
+soup = ''
+r_url = ''
+sm_url = ''
+total = []
+r_total = []
+sm_total = []
+js_total = []
+css_total = []
+int_total = []
+ext_total = []
+img_total = []
+js_crawl_total = []
+sm_crawl_total = []
+
+def crawler(target, output, data):
+	global soup, r_url, sm_url
+	print('\n' + Y + '[!]' + Y + ' Starting Crawler...' + W + '\n')
+
 	try:
 		rqst = requests.get(target, headers=user_agent, verify=False, timeout=10)
-		sc = rqst.status_code
-		if sc == 200:
-			domain = target.split('//')
-			domain = domain[1]
-			page = rqst.content
-			soup = bs4.BeautifulSoup(page, 'lxml')
-			file = '{}.dump'.format(domain)
-			path = os.getcwd()
-			r_url = 'http://{}/robots.txt'.format(domain)
-			sm_url = 'http://{}/sitemap.xml'.format(domain)
+	except Exception as e:
+		print(R + '[-] Exception : ' + C + str(e) + W)
+		exit()
 
-			print(G + '[+]' + C + ' Looking for robots.txt' + W, end = '')
-			r_rqst = requests.get(r_url, headers=user_agent, verify=False, timeout=10)
-			r_sc = r_rqst.status_code
+	sc = rqst.status_code
+	if sc == 200:
+		page = rqst.content
+		soup = bs4.BeautifulSoup(page, 'lxml')
 
-			if r_sc == 200:
-				print(G + '['.rjust(9, '.') + ' Found ]' + W)
-				print(G + '[+]' + C + ' Extracting robots Links', end = '')
-				r_page = r_rqst.text
-				r_scrape = r_page.split('\n')
-				for entry in r_scrape:
-					if 'Disallow' in entry:
-						url = entry.split(':')
-						try:
-							url = url[1]
-							url = url.strip()
-							total.append(url)
-							r_total.append(target + url)
-						except:
-							pass
-					elif 'Allow' in entry:
-						url = entry.split(':')
-						try:
-							url = url[1]
-							url = url.strip()
-							total.append(url)
-							r_total.append(target + url)
-						except:
-							pass
-				r_total = set(r_total)
-				print(G + '['.rjust(8, '.') + ' {} ]'.format(str(len(r_total))))
+		ext = tldextract.extract(target)
+		hostname = '.'.join(part for part in ext if part)
+		protocol = target.split('://')
+		protocol = protocol[0]
 
-			elif r_sc == 404:
-				print(R + '['.rjust(9, '.') + ' Not Found ]' + W)
-			else:
-				print(R + '['.rjust(9, '.') + ' {} ]'.format(r_sc) + W)
+		r_url = protocol + '://' + hostname + '/robots.txt'
+		sm_url = protocol + '://' + hostname + '/sitemap.xml'
 
-			print(G + '[+]' + C + ' Looking for sitemap.xml' + W, end = '')
-			sm_rqst = requests.get(sm_url, headers=user_agent, verify=False, timeout=10)
+		loop = asyncio.new_event_loop()
+		asyncio.set_event_loop(loop)
+		tasks = asyncio.gather(
+			robots(target),
+			sitemap(),
+			css(target),
+			js(target),
+			internal_links(target),
+			external_links(target),
+			images(target),
+			sm_crawl(),
+			js_crawl())
+		loop.run_until_complete(tasks)
+		loop.close()
+
+		out(target, output, data)
+	else:
+		print (R + '[-]' + C + ' Status : ' + W + str(sc))
+
+def url_filter(target):
+	global url
+
+	if all([url.startswith('/') == True, url.startswith('//') == False]):
+		url = target + url
+	else:
+		pass
+
+	if all([url.find('http://') == -1,
+		url.find('https://') == -1]):
+
+		url = url.replace('//', 'http://')
+		url = url.replace('../', target + '/')
+		url = url.replace('./', target + '/')
+	else:
+		pass
+
+	if all([url.find('//') == -1,
+		url.find('../') == -1,
+		url.find('./') == -1,
+		url.find('http://') == -1,
+		url.find('https://') == -1]):
+
+		url = target + '/' + url
+	else:
+		pass
+
+async def robots(target):
+	global url, r_url, r_total
+	print(G + '[+]' + C + ' Looking for robots.txt' + W, end = '')
+
+	try:
+		r_rqst = requests.get(r_url, headers=user_agent, verify=False, timeout=10)
+		r_sc = r_rqst.status_code
+		if r_sc == 200:
+			print(G + '['.rjust(9, '.') + ' Found ]' + W)
+			print(G + '[+]' + C + ' Extracting robots Links', end = '')
+			r_page = r_rqst.text
+			r_scrape = r_page.split('\n')
+			for entry in r_scrape:
+				if (entry.find('Disallow') == 0 or
+					entry.find('Allow') == 0 or
+					entry.find('Sitemap') == 0):
+
+					url = entry.split(': ')
+					try:
+						url = url[1]
+						url = url.strip()
+						url_filter(target)
+						r_total.append(url)
+						if url.endswith('xml') == True:
+							sm_total.append(url)
+					except:
+						pass
+
+			r_total = set(r_total)
+
+			print(G + '['.rjust(8, '.') + ' {} ]'.format(str(len(r_total))))
+
+		elif r_sc == 404:
+			print(R + '['.rjust(9, '.') + ' Not Found ]' + W)
+		else:
+			print(R + '['.rjust(9, '.') + ' {} ]'.format(r_sc) + W)
+	except Exception as e:
+		print(R + '[-] Exception : ' + C + str(e) + W)
+
+async def sitemap():
+	global url, sm_url, total, sm_total
+	print(G + '[+]' + C + ' Looking for sitemap.xml' + W, end = '')
+	try:
+		sm_rqst = requests.get(sm_url, headers=user_agent, verify=False, timeout=10)
+		sm_sc = sm_rqst.status_code
+		if sm_sc == 200:
+			print(G + '['.rjust(8, '.') + ' Found ]' + W)
+			print(G + '[+]' + C + ' Extracting sitemap Links', end = '')
+			sm_page = sm_rqst.content
+			sm_soup = bs4.BeautifulSoup(sm_page, 'xml')
+			links = sm_soup.find_all('loc')
+			for url in links:
+				url = url.get_text()
+				if url != None:
+					sm_total.append(url)
+
+			sm_total = set(sm_total)
+
+			print(G + '['.rjust(7, '.') + ' {} ]'.format(str(len(sm_total))))
+		elif sm_sc == 404:
+			print(R + '['.rjust(8, '.') + ' Not Found ]' + W)
+		else:
+			print(R + '['.rjust(8, '.') + ' {} ]'.format(sm_sc) + W)
+	except Exception as e:
+		print('\n' + R + '[-] Exception : ' + C + str(e))
+
+async def css(target):
+	global url, soup, total, css_total
+	print(G + '[+]' + C + ' Extracting CSS Links' + W, end = '')
+	css = soup.find_all('link')
+
+	for link in css:
+		url = link.get('href')
+		if url != None and '.css' in url:
+			url_filter(target)
+			css_total.append(url)
+
+	css_total = set(css_total)
+	print(G + '['.rjust(11, '.') + ' {} ]'.format(str(len(css_total))) + W)
+
+async def js(target):
+	global url, total, js_total
+	print(G + '[+]' + C + ' Extracting Javascript Links' + W, end = '')
+	js = soup.find_all('script')
+
+	for link in js:
+		url = link.get('src')
+		if url != None and '.js' in url:
+			url_filter(target)
+			js_total.append(url)
+
+	js_total = set(js_total)
+	print(G + '['.rjust(4, '.') + ' {} ]'.format(str(len(js_total))))
+
+async def internal_links(target):
+	global total, int_total
+	print(G + '[+]' + C + ' Extracting Internal Links' + W, end = '')
+
+	ext = tldextract.extract(target)
+	domain = ext.registered_domain
+
+	links = soup.find_all('a')
+	for link in links:
+		url = link.get('href')
+		if url != None:
+			if domain in url:
+				int_total.append(url)
+
+	int_total = set(int_total)
+	print(G + '['.rjust(6, '.') + ' {} ]'.format(str(len(int_total))))
+
+async def external_links(target):
+	global total, ext_total
+	print(G + '[+]' + C + ' Extracting External Links' + W, end = '')
+
+	ext = tldextract.extract(target)
+	domain = ext.registered_domain
+
+	links = soup.find_all('a')
+	for link in links:
+		url = link.get('href')
+		if url != None:
+			if domain not in url and 'http' in url:
+				ext_total.append(url)
+
+	ext_total = set(ext_total)
+	print(G + '['.rjust(6, '.') + ' {} ]'.format(str(len(ext_total))))
+
+async def images(target):
+	global url, total, img_total
+	print(G + '[+]' + C + ' Extracting Images' + W, end = '')
+	images = soup.find_all('img')
+
+	for link in images:
+		url = link.get('src')
+		if url != None and len(url) > 1:
+			url_filter(target)
+			img_total.append(url)
+
+	img_total = set(img_total)
+	print(G + '['.rjust(14, '.') + ' {} ]'.format(str(len(img_total))))
+
+async def sm_crawl():
+	global sm_crawl_total
+	print(G + '[+]' + C + ' Crawling Sitemaps' + W, end = '')
+
+	threads = []
+	
+	def fetch(site_url):
+		try:
+			sm_rqst = requests.get(site_url, headers=user_agent, verify=False, timeout=10)
 			sm_sc = sm_rqst.status_code
 			if sm_sc == 200:
-				print(G + '['.rjust(8, '.') + ' Found ]' + W)
-				print(G + '[+]' + C + ' Extracting sitemap Links', end = '')
-				sm_page = sm_rqst.content
-				sm_soup = bs4.BeautifulSoup(sm_page, 'xml')
+				sm_data = sm_rqst.content.decode()
+				sm_soup = bs4.BeautifulSoup(sm_data, 'xml')
 				links = sm_soup.find_all('loc')
 				for url in links:
 					url = url.get_text()
-					if url is not None:
-						total.append(url)
-						sm_total.append(url)
-				sm_total = set(sm_total)
-				print(G + '['.rjust(7, '.') + ' {} ]'.format(str(len(sm_total))))
-
+					if url != None:
+						sm_crawl_total.append(url)
 			elif sm_sc == 404:
 				print(R + '['.rjust(8, '.') + ' Not Found ]' + W)
 			else:
 				print(R + '['.rjust(8, '.') + ' {} ]'.format(sm_sc) + W)
+		except Exception as e:
+			print('\n' + R + '[-] Exception : ' + C + str(e))
 
-			print(G + '[+]' + C + ' Extracting CSS Links' + W, end = '')
-			css = soup.find_all('link')
-			for link in css:
-				url = link.get('href')
-				if url is not None and '.css' in url:
-					total.append(url)
-					css_total.append(url)
-			css_total = set(css_total)
-			print(G + '['.rjust(11, '.') + ' {} ]'.format(str(len(css_total))))
+	for site_url in sm_total:
+		if site_url != sm_url:
+			if site_url.endswith('xml') == True:
+				t = threading.Thread(target=fetch, args=[site_url])
+				t.daemon = True
+				threads.append(t)
+				t.start()
 
-			print(G + '[+]' + C + ' Extracting Javascript Links' + W, end = '')
-			js = soup.find_all('script')
-			for link in js:
-				url = link.get('src')
-				if url is not None and '.js' in url:
-					total.append(url)
-					js_total.append(url)
-			js_total = set(js_total)
-			print(G + '['.rjust(4, '.') + ' {} ]'.format(str(len(js_total))))
+	for thread in threads:
+		thread.join()
 
-			print(G + '[+]' + C + ' Extracting Internal Links' + W, end = '')
-			links = soup.find_all('a')
-			for link in links:
-				url = link.get('href')
-				if url is not None:
-					if domain in url:
-						total.append(url)
-						int_total.append(url)
-			int_total = set(int_total)
-			print(G + '['.rjust(6, '.') + ' {} ]'.format(str(len(int_total))))
+	sm_crawl_total = set(sm_crawl_total)
+	print(G + '['.rjust(14, '.') + ' {} ]'.format(str(len(sm_crawl_total))))
 
-			print(G + '[+]' + C + ' Extracting External Links' + W, end = '')
-			for link in links:
-				url = link.get('href')
-				if url is not None:
-					if domain not in url and 'http' in url:
-						total.append(url)
-						ext_total.append(url)
-			ext_total = set(ext_total)
-			print(G + '['.rjust(6, '.') + ' {} ]'.format(str(len(ext_total))))
+async def js_crawl():
+	global js_crawl_total
+	print(G + '[+]' + C + ' Crawling Javascripts' + W, end = '')
 
-			print(G + '[+]' + C + ' Extracting Images' + W, end = '')
-			images = soup.find_all('img')
-			for link in images:
-				src = link.get('src')
-				if src is not None and len(src) > 1:
-					total.append(src)
-					img_total.append(src)
-			img_total = set(img_total)
-			print(G + '['.rjust(14, '.') + ' {} ]'.format(str(len(img_total))))
+	threads = []
 
-			total = set(total)
-			print('\n' + G + '[+]' + C + ' Total Links Extracted : ' + W + str(len(total)) + '\n')
+	def fetch(js_url):
+		try:
+			js_rqst = requests.get(js_url, headers=user_agent, verify=False, timeout=10)
+			js_sc = js_rqst.status_code
+			if js_sc == 200:
+				js_data = js_rqst.content.decode()
+				js_data = js_data.split(';')
+				for line in js_data:
+					if any(['http://' in line, 'https://' in line]):
+						found = re.findall(r'\"(http[s]?://.*?)\"', line)
+						for item in found:
+							if len(item) > 8:
+								js_crawl_total.append(item)
+		except Exception as e:
+			print(R + '[-] Exception : ' + C + str(e))
 
-			if len(total) is not 0:
-				print(G + '[+]' + C + ' Dumping Links in ' + W + '{}/dumps/{}'.format(path, file))
-				with open('dumps/{}'.format('{}.dump'.format(domain)), 'w') as dumpfile:
-					dumpfile.write('URL : {}'.format(target) + '\n\n')
-					try:
-						dumpfile.write('Title : {}'.format(soup.title.string) + '\n')
-					except AttributeError:
-						dumpfile.write('Title : None' + '\n')
-					dumpfile.write('\nrobots Links      : ' + str(len(r_total)))
-					dumpfile.write('\nsitemap Links     : ' + str(len(sm_total)))
-					dumpfile.write('\nCSS Links         : ' + str(len(css_total)))
-					dumpfile.write('\nJS Links          : ' + str(len(js_total)))
-					dumpfile.write('\nInternal Links    : ' + str(len(int_total)))
-					dumpfile.write('\nExternal Links    : ' + str(len(ext_total)))
-					dumpfile.write('\nImages Links      : ' + str(len(img_total)))
-					dumpfile.write('\nTotal Links Found : ' + str(len(total)) + '\n')
+	for js_url in js_total:
+		t = threading.Thread(target=fetch, args=[js_url])
+		t.daemon = True
+		threads.append(t)
+		t.start()
 
-					if len(r_total) is not 0:
-						dumpfile.write('\nrobots :\n\n')
-						for item in r_total:
-							dumpfile.write(str(item) + '\n')
-					if len(sm_total) is not 0:
-						dumpfile.write('\nsitemap :\n\n')
-						for item in sm_total:
-							dumpfile.write(str(item) + '\n')
-					if len(css_total) is not 0:
-						dumpfile.write('\nCSS :\n\n')
-						for item in css_total:
-							dumpfile.write(str(item) + '\n')
-					if len(js_total) is not 0:
-						dumpfile.write('\nJavascript :\n\n')
-						for item in js_total:
-							dumpfile.write(str(item) + '\n')
-					if len(int_total) is not 0:
-						dumpfile.write('\nInternal Links :\n\n')
-						for item in int_total:
-							dumpfile.write(str(item) + '\n')
-					if len(ext_total) is not 0:
-						dumpfile.write('\nExternal Links :\n\n')
-						for item in ext_total:
-							dumpfile.write(str(item) + '\n')
-					if len(img_total) is not 0:
-						dumpfile.write('\nImages :\n\n')
-						for item in img_total:
-							dumpfile.write(str(item) + '\n')
+	for thread in threads:
+		thread.join()
 
-		else:
-			print (R + '[-]' + C + ' Error : ' + W + str(sc))
-	except Exception as e:
-		print(R + '[-] Error : ' + C + str(e))
+	js_crawl_total = set(js_crawl_total)
+	print(G + '['.rjust(11, '.') + ' {} ]'.format(str(len(js_crawl_total))))
+
+def out(target, output, data):
+	global total
+
+	total.extend(r_total)
+	total.extend(sm_total)
+	total.extend(css_total)
+	total.extend(js_total)
+	total.extend(js_crawl_total)
+	total.extend(sm_crawl_total)
+	total.extend(int_total)
+	total.extend(ext_total)
+	total.extend(img_total)
+	total = set(total)
+
+	print('\n' + G + '[+]' + C + ' Total Unique Links Extracted : ' + W + str(len(total)))
+
+	if output != 'None':
+		if len(total) != 0:
+			data['module-Crawler'] = {'Total Unique Links Extracted': str(len(total))}
+			try:
+				data['module-Crawler'].update({'Title':soup.title.string})
+			except AttributeError:
+				data['module-Crawler'].update({'Title : None'})
+			
+			data['module-Crawler'].update(
+				{
+					'Count ( Robots )':      str(len(r_total)),
+					'Count ( Sitemap )':     str(len(sm_total)),
+					'Count ( CSS )':         str(len(css_total)),
+					'Count ( JS )':          str(len(js_total)),
+					'Count ( Links in JS )':       str(len(js_crawl_total)),
+					'Count ( Links in Sitemaps )': str(len(sm_crawl_total)),
+					'Count ( Internal )':    str(len(int_total)),
+					'Count ( External )':    str(len(ext_total)),
+					'Count ( Images )':      str(len(img_total)),
+					'Count ( Total )': str(len(total))
+				})
+			
+			if len(r_total) != 0:
+				data['module-Crawler'].update({'Robots': list(r_total)})
+			
+			if len(sm_total) != 0:
+				data['module-Crawler'].update({'Sitemaps': list(sm_total)})
+			
+			if len(css_total) != 0:
+				data['module-Crawler'].update({'CSS': list(css_total)})
+			
+			if len(js_total) != 0:
+				data['module-Crawler'].update({'Javascripts': list(js_total)})
+
+			if len(js_crawl_total) != 0:
+				data['module-Crawler'].update({'Links inside Javascripts': list(js_crawl_total)})
+			
+			if len(sm_crawl_total) != 0:
+				data['module-Crawler'].update({'Links Inside Sitemaps': list(sm_crawl_total)})
+			
+			if len(int_total) != 0:
+				data['module-Crawler'].update({'Internal Links': list(int_total)})
+		
+			if len(ext_total) != 0:
+				data['module-Crawler'].update({'External Links': list(ext_total)})
+			
+			if len(img_total) != 0:
+				data['module-Crawler'].update({'Images': list(img_total)})
