@@ -4,6 +4,7 @@ bs4
 lxml
 dnslib
 aiohttp
+aiodns
 psycopg2
 tldextract
 icmplib
