@@ -82,7 +82,7 @@ async def thcrowd(hostname, tout):
 async def anubisdb(hostname, tout):
 	global found
 	print(Y + '[!]' + C + ' Requesting ' + G + 'AnubisDB' + W)
-	url = 'https://jonlu.ca/anubis/subdomains/{}'.format(hostname)
+	url = 'https://jldc.me/anubis/subdomains/{}'.format(hostname)
 	try:
 		r = requests.get(url, timeout=tout)
 		sc = r.status_code
