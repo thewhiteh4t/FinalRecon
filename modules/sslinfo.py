@@ -22,10 +22,6 @@ def cert(hostname, output, data):
 			s.connect((hostname, 443))
 			info = s.getpeercert()
 		except:
-			ctx = ssl._create_unverified_context()
-			s = ctx.wrap_socket(socket.socket(), server_hostname=hostname)
-			s.connect((hostname, 443))
-			info = s.getpeercert(True)
 			info = ssl.get_server_certificate((hostname, 443))
 			f = open('{}.pem'.format(hostname), 'w')
 			f.write(info)
