@@ -8,4 +8,4 @@ do
 	python3 finalrecon.py --headers https://$domain -o csv
 IFS=$oldIFS
 done < "$1"
-#IFS=$oldIFS
+
