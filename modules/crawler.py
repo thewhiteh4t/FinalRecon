@@ -108,7 +108,7 @@ async def robots(target):
 	print(G + '[+]' + C + ' Looking for robots.txt' + W, end = '')
 
 	try:
-		r_rqst = requests.get(r_url, headers=user_agent, verify=False, timeout=10)
+		r_rqst = requests.get(r_url, headers=user_agent, verify=True, timeout=10)
 		r_sc = r_rqst.status_code
 		if r_sc == 200:
 			print(G + '['.rjust(9, '.') + ' Found ]' + W)
@@ -156,7 +156,7 @@ async def sitemap():
 			links = sm_soup.find_all('loc')
 			for url in links:
 				url = url.get_text()
-				if url != None:
+				if url is not None:
 					sm_total.append(url)
 
 			sm_total = set(sm_total)

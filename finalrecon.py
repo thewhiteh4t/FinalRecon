@@ -32,7 +32,7 @@ for pkg in pkg_list:
 		pass
 if fail == True:
 	print('\n' + R + '[-]' + C + ' Please Execute ' + W + 'pip3 install -r requirements.txt' + C + ' to Install Missing Packages' + W + '\n')
-	exit()
+	sys.exit()
 
 import argparse
 
