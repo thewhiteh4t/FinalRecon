@@ -39,7 +39,7 @@ def crawler(target, output, data):
 	print('\n' + Y + '[!]' + Y + ' Starting Crawler...' + W + '\n')
 
 	try:
-		rqst = requests.get(target, headers=user_agent, verify=True, timeout=10)
+		rqst = requests.get(target, headers=user_agent, verify=false, timeout=10)
 	except Exception as e:
 		print(R + '[-] Exception : ' + C + str(e) + W)
 		exit()
