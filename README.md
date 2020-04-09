@@ -14,9 +14,9 @@
   <a href="https://thewhiteh4t.github.io"><b>thewhiteh4t's Blog</b></a>
 </p>
 
-| Available                            | in                                   |
-|--------------------------------------|--------------------------------------|
-| ![](https://i.imgur.com/1wJVDV5.png) | ![](https://i.imgur.com/z36xL8c.png) |
+| Available | in | |
+|-|-|-|
+| ![BlackArch Linux](https://i.imgur.com/1wJVDV5.png) | ![SecBSD](https://i.imgur.com/z36xL8c.png) | ![Tsurugi Linux](https://i.imgur.com/S1ylcp7.jpg) |
 
 FinalRecon is a fast and simple python script for web reconnaissance. It follows a modular structure so in future new modules can be added with ease.
 
@@ -111,12 +111,29 @@ FinalRecon provides detailed information such as :
 * Kali Linux 2019.1
 * BlackArch Linux
 
+> FinalRecon is a tool for **Pentesters** and it's designed for **Linux** based Operating Systems, other platforms like **Windows** and **Termux** are **NOT** supported.
+
 ## Installation
+
+### BlackArch Linux
+
+```
+pacman -S finalrecon
+```
+
+### Kali Linux
 
 ```bash
 git clone https://github.com/thewhiteh4t/FinalRecon.git
 cd FinalRecon
 pip3 install -r requirements.txt
+```
+
+### Docker
+
+```
+docker pull thewhiteh4t/finalrecon
+docker run -it --entrypoint /bin/sh thewhiteh4t/finalrecon
 ```
 
 ## Usage
