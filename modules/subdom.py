@@ -118,13 +118,41 @@ async def thminer(hostname, tout):
 	except Exception as e:
 		print(R + '[-]' + C + ' ThreatMiner Exception : ' + W + str(e))
 
+async def fb_cert(hostname, tout):
+	global found
+	with open('conf/keys.json', 'r') as keyfile:
+		json_read = keyfile.read()
+	
+	json_load = json.loads(json_read)
+	fb_key = json_load['api_keys'][0]['facebook']
+	
+	if fb_key != None:
+		print(Y + '[!]' + C + ' Requesting ' + G + 'Facebook' + W)
+		url = 'https://graph.facebook.com/certificates'
+		data = {
+			'query': hostname,
+    		'fields': 'domains',
+    		'access_token': fb_key
+		}
+
+		r = requests.get(url, params=data)
+		json_data = r.text
+		json_read = json.loads(json_data)
+		domains = json_read['data']
+
+		for i in range (0, len(domains)):
+			found.extend(json_read['data'][i]['domains'])
+	else:
+		pass
+
 async def query(hostname, tout):
 	await asyncio.gather(
 		buffover(hostname, tout),
 		thcrowd(hostname, tout),
 		crtsh(hostname),
 		anubisdb(hostname, tout),
-		thminer(hostname, tout)
+		thminer(hostname, tout),
+		fb_cert(hostname, tout)
 		)
 
 def subdomains(hostname, tout, output, data):
