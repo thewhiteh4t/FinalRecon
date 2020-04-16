@@ -53,6 +53,8 @@ FinalRecon provides detailed information such as :
     * ThreatCrowd
     * AnubisDB
     * ThreatMiner
+    * Facebook Certificate Transparency API
+      * Auth Token is Required for this source, read Configuration below
 
 * Traceroute
   * Protocols
@@ -72,6 +74,25 @@ FinalRecon provides detailed information such as :
     * txt
     * xml
     * csv
+
+## Configuration
+
+### API Keys
+
+Some Modules Use API Keys to fetch data from different resources, these are optional, if you are not using an API key, they will be simply skipped.
+If you are interested in using these resources you can store your API key in **keys.json** file.
+
+`Path --> finalrecon/conf/keys.json`
+
+If you dont want to use a key for a certain data source just set its value to `null`, by default values of all available data sources are null.
+
+#### Facebook Developers API
+
+This data source is used to fetch **Certificate Transparency** data which is used in **Subdomain Enumeration**
+
+Key Format : `APP-ID|APP-SECRET`
+
+Read More : https://developers.facebook.com/docs/facebook-login/access-tokens
 
 ## Screenshots
 
