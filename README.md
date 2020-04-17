@@ -1,4 +1,4 @@
-<p align="center"><img src="https://i.imgur.com/a77Edpi.png"></p>
+<p align="center"><img src="https://i.imgur.com/rLENhCp.jpg"></p>
 
 <p align="center">
 <img src="https://img.shields.io/badge/Python-3-brightgreen.svg?style=plastic">
