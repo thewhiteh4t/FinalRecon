@@ -96,37 +96,25 @@ Read More : https://developers.facebook.com/docs/facebook-login/access-tokens
 
 ## Screenshots
 
-### Header Information
-<p align="center"><img src="https://i.imgur.com/B7sblDP.png"></p>
+| Headers | WHOIS |
+|-|-|
+| ![header](https://i.imgur.com/B7sblDP.png) | ![whois](https://i.imgur.com/cDEJ79H.png) |
 
-### WHOIS
-<p align="center"><img src="https://i.imgur.com/cDEJ79H.png"></p>
+| SSL Certificate Details | Crawler |
+|-|-|
+| ![SSL](https://i.imgur.com/PFZm0qx.png) | ![crawler](https://i.imgur.com/C8eQ8z3.png) |
 
-### SSL Certificate Details
-<p align="center"><img src="https://i.imgur.com/PFZm0qx.png"></p>
-<p align="center">Found Flag in SSL Certificate - Securinets CTF Quals 2019 - Hidden (200 Points)</p>
+| DNS Enumeration | Subdomain Enumeration |
+|-|-|
+| ![dns](https://i.imgur.com/dUlnIv6.png) | ![subdomains](https://i.imgur.com/G7Tm5k1.png) |
 
-### Crawler
-<p align="center"><img src="https://i.imgur.com/C8eQ8z3.png">
+| Traceroute | Directory Searching |
+|-|-|
+| ![Traceroute](https://i.imgur.com/v9NZjo2.png) | ![Directory Searching](https://i.imgur.com/V9mXO31.png) |
 
-### DNS Enumeration
-<p align="center"><img src="https://i.imgur.com/dUlnIv6.png"></p>
-<p align="center">HackTheBox OSINT Challenge</p>
-
-### Subdomain Enumeration
-<p align="center"><img src="https://i.imgur.com/G7Tm5k1.png"></p>
-
-### Traceroute
-
-<p align="center"><img src="https://i.imgur.com/v9NZjo2.png"></p>
-
-### Directory Searching
-
-<p align="center"><img src="https://i.imgur.com/V9mXO31.png"></p>
-
-### Port Scan
-
-<p align="center"><img src="https://i.imgur.com/mOpWydU.png"></p>
+| Port Scan |
+|-|
+| ![Port Scan](https://i.imgur.com/mOpWydU.png) |
 
 ## Tested on
 
