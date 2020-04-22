@@ -94,31 +94,9 @@ Key Format : `APP-ID|APP-SECRET`
 
 Read More : https://developers.facebook.com/docs/facebook-login/access-tokens
 
-## Screenshots
-
-| Headers | WHOIS |
-|-|-|
-| ![header](https://i.imgur.com/B7sblDP.png) | ![whois](https://i.imgur.com/cDEJ79H.png) |
-
-| SSL Certificate Details | Crawler |
-|-|-|
-| ![SSL](https://i.imgur.com/PFZm0qx.png) | ![crawler](https://i.imgur.com/C8eQ8z3.png) |
-
-| DNS Enumeration | Subdomain Enumeration |
-|-|-|
-| ![dns](https://i.imgur.com/dUlnIv6.png) | ![subdomains](https://i.imgur.com/G7Tm5k1.png) |
-
-| Traceroute | Directory Searching |
-|-|-|
-| ![Traceroute](https://i.imgur.com/v9NZjo2.png) | ![Directory Searching](https://i.imgur.com/V9mXO31.png) |
-
-| Port Scan |
-|-|
-| ![Port Scan](https://i.imgur.com/mOpWydU.png) |
-
 ## Tested on
 
-* Kali Linux 2019.1
+* Kali Linux
 * BlackArch Linux
 
 > FinalRecon is a tool for **Pentesters** and it's designed for **Linux** based Operating Systems, other platforms like **Windows** and **Termux** are **NOT** supported.
