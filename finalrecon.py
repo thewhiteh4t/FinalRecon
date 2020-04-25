@@ -36,7 +36,7 @@ if fail == True:
 
 import argparse
 
-version = '1.0.3'
+version = '1.0.5'
 
 parser = argparse.ArgumentParser(description='FinalRecon - OSINT Tool for All-In-One Web Recon | v{}'.format(version))
 parser.add_argument('url', help='Target URL')

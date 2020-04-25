@@ -1,4 +1,4 @@
-<p align="center"><img src="https://i.imgur.com/a77Edpi.png"></p>
+<p align="center"><img src="https://i.imgur.com/rLENhCp.jpg"></p>
 
 <p align="center">
 <img src="https://img.shields.io/badge/Python-3-brightgreen.svg?style=plastic">
@@ -14,9 +14,10 @@
   <a href="https://thewhiteh4t.github.io"><b>thewhiteh4t's Blog</b></a>
 </p>
 
-| Available                            | in                                   |
-|--------------------------------------|--------------------------------------|
-| ![](https://i.imgur.com/1wJVDV5.png) | ![](https://i.imgur.com/z36xL8c.png) |
+| Available | in | |
+|-|-|-|
+| [BlackArch Linux](https://blackarch.org/) | [SecBSD](https://secbsd.org/) | [Tsurugi Linux](https://tsurugi-linux.org/) |
+| ![BlackArch Linux](https://i.imgur.com/1wJVDV5.png) | ![SecBSD](https://i.imgur.com/z36xL8c.png) | ![Tsurugi Linux](https://i.imgur.com/S1ylcp7.jpg) |
 
 FinalRecon is a fast and simple python script for web reconnaissance. It follows a modular structure so in future new modules can be added with ease.
 
@@ -52,6 +53,8 @@ FinalRecon provides detailed information such as :
     * ThreatCrowd
     * AnubisDB
     * ThreatMiner
+    * Facebook Certificate Transparency API
+      * Auth Token is Required for this source, read Configuration below
 
 * Traceroute
   * Protocols
@@ -72,51 +75,53 @@ FinalRecon provides detailed information such as :
     * xml
     * csv
 
-## Screenshots
+## Configuration
 
-### Header Information
-<p align="center"><img src="https://i.imgur.com/B7sblDP.png"></p>
+### API Keys
 
-### WHOIS
-<p align="center"><img src="https://i.imgur.com/cDEJ79H.png"></p>
+Some Modules Use API Keys to fetch data from different resources, these are optional, if you are not using an API key, they will be simply skipped.
+If you are interested in using these resources you can store your API key in **keys.json** file.
 
-### SSL Certificate Details
-<p align="center"><img src="https://i.imgur.com/PFZm0qx.png"></p>
-<p align="center">Found Flag in SSL Certificate - Securinets CTF Quals 2019 - Hidden (200 Points)</p>
+`Path --> finalrecon/conf/keys.json`
 
-### Crawler
-<p align="center"><img src="https://i.imgur.com/C8eQ8z3.png">
+If you dont want to use a key for a certain data source just set its value to `null`, by default values of all available data sources are null.
 
-### DNS Enumeration
-<p align="center"><img src="https://i.imgur.com/dUlnIv6.png"></p>
-<p align="center">HackTheBox OSINT Challenge</p>
+#### Facebook Developers API
 
-### Subdomain Enumeration
-<p align="center"><img src="https://i.imgur.com/G7Tm5k1.png"></p>
+This data source is used to fetch **Certificate Transparency** data which is used in **Subdomain Enumeration**
 
-### Traceroute
+Key Format : `APP-ID|APP-SECRET`
 
-<p align="center"><img src="https://i.imgur.com/v9NZjo2.png"></p>
-
-### Directory Searching
-
-<p align="center"><img src="https://i.imgur.com/V9mXO31.png"></p>
-
-### Port Scan
-
-<p align="center"><img src="https://i.imgur.com/mOpWydU.png"></p>
+Read More : https://developers.facebook.com/docs/facebook-login/access-tokens
 
 ## Tested on
 
-* Kali Linux 2019.1
+* Kali Linux
 * BlackArch Linux
 
+> FinalRecon is a tool for **Pentesters** and it's designed for **Linux** based Operating Systems, other platforms like **Windows** and **Termux** are **NOT** supported.
+
 ## Installation
+
+### BlackArch Linux
+
+```
+pacman -S finalrecon
+```
+
+### Kali Linux
 
 ```bash
 git clone https://github.com/thewhiteh4t/FinalRecon.git
 cd FinalRecon
 pip3 install -r requirements.txt
+```
+
+### Docker
+
+```
+docker pull thewhiteh4t/finalrecon
+docker run -it --entrypoint /bin/sh thewhiteh4t/finalrecon
 ```
 
 ## Usage
