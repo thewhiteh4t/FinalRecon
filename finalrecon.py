@@ -12,9 +12,13 @@ W = '\033[0m'  # white
 
 fail = False
 
-if os.geteuid() != 0:
-	print('\n' + R + '[-]' + C + ' Please Run as Root!' + '\n')
-	sys.exit()
+import platform
+if platform.system() == 'Linux':
+	if os.geteuid() != 0:
+		print('\n' + R + '[-]' + C + ' Please Run as Root!' + '\n')
+		sys.exit()
+	else:
+		pass
 else:
 	pass
 
@@ -36,9 +40,9 @@ if fail == True:
 
 import argparse
 
-version = '1.0.5'
+version = '1.0.6'
 
-parser = argparse.ArgumentParser(description='FinalRecon - OSINT Tool for All-In-One Web Recon | v{}'.format(version))
+parser = argparse.ArgumentParser(description='FinalRecon - The Last Recon Tool You Will Need | v{}'.format(version))
 parser.add_argument('url', help='Target URL')
 parser.add_argument('--headers', help='Header Information', action='store_true')
 parser.add_argument('--sslinfo', help='SSL Certificate Information', action='store_true')
@@ -108,7 +112,6 @@ data = {}
 meta = {}
 
 def banner():
-	os.system('clear')
 	banner = r'''
  ______  __   __   __   ______   __
 /\  ___\/\ \ /\ "-.\ \ /\  __ \ /\ \

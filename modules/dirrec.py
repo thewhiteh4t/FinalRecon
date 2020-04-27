@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+import json
 import socket
 import aiohttp
 import asyncio
+from datetime import date
 
 R = '\033[31m' # red
 G = '\033[32m' # green
@@ -12,6 +14,13 @@ Y = '\033[93m' # yellow
 
 header = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:72.0) Gecko/20100101 Firefox/72.0'}
 count = 0
+wm_count = 0
+found = []
+skipped = []
+responses = []
+wayback_found = []
+curr_yr = date.today().year
+last_yr = curr_yr - 1
 
 async def fetch(url, session, redir, sslv):
 	global count
@@ -24,6 +33,7 @@ async def fetch(url, session, redir, sslv):
 		print(R + '[-]' + C + ' Exception : ' + W + str(e).strip('\n'))
 
 async def run(target, threads, tout, wdlist, redir, sslv, dserv, output, data):
+	global responses
 	tasks = []
 	url = target + '/{}'
 	resolver = aiohttp.AsyncResolver(nameservers=[dserv])
@@ -36,41 +46,121 @@ async def run(target, threads, tout, wdlist, redir, sslv, dserv, output, data):
 				task = asyncio.create_task(fetch(url.format(word), session, redir, sslv))
 				tasks.append(task)
 		responses = await asyncio.gather(*tasks)
-		dir_output(responses, output, data)
+		
+async def wayback(dserv, tout):
+	global found
+	print('\n' + Y + '[!]' + C + ' Requesting Wayback Machine...' + W + '\n')
+	tasks = []
+	resolver = aiohttp.AsyncResolver(nameservers=[dserv])
+	conn = aiohttp.TCPConnector(limit=10)
+	timeout = aiohttp.ClientTimeout(total=None, sock_connect=tout, sock_read=tout)
+	async with aiohttp.ClientSession(connector=conn, timeout=timeout) as session:
+		for f_url in found:
+			tasks.append(asyncio.create_task(wm_fetch(f_url, session)))
+		await asyncio.gather(*tasks)
 
-def dir_output(responses, output, data):
-	found = []
-	skipped = []
+async def wm_fetch(f_url, session):
+	global wayback_found, wm_count
+	wm_url = 'http://web.archive.org/cdx/search/cdx'
+	domain = str(f_url)
+	data= {
+	    'url': domain,
+		'matchType': 'prefix',
+	    'fl': 'original',
+	    'fastLatest': 'true',
+	    'filter': 'statuscode:200',
+		'from': '{}'.format(str(last_yr)),
+		'to': '{}'.format(str(curr_yr)),
+		'output': 'json'
+	}
+	try:
+		async with session.get(wm_url, params=data) as resp:
+			wm_count += 1
+			print(Y + '[!]' + C + ' Requests : ' + W + str(wm_count), end='\r')
+			answer = await resp.text()
+			if resp.status == 200:
+				json_ans = json.loads(answer)
+				if len(json_ans) != 0:
+					json_ans.pop(0)
+					if len(json_ans) != 0:
+						for item in json_ans:
+							addr = item[0]
+							addr = addr.replace(':80', '')
+							wayback_found.append(addr)
+	except Exception as e:
+		print(R + '[-]' + C + ' Exception : ' + W + str(e))
+
+def filter_out(target):
+	global responses, found, skipped, wayback_found
+	for entry in responses:
+		if entry != None:
+			if entry[1] in {200}:
+				if str(entry[0]) != target + '/':
+					found.append(entry[0])
+					print(G + '[+]' + G + ' {}'.format(str(entry[1]) + C + ' | ' + W + '{}'.format(entry[0])))
+			elif entry[1] in {301, 302, 303, 307, 308}:
+				found.append(entry[0])
+				print(G + '[+]' + Y + ' {}'.format(str(entry[1]) + C + ' | ' + W + '{}'.format(entry[0])))
+			elif entry[1] in {403}:
+				found.append(entry[0])
+				print(G + '[+]' + R + ' {}'.format(str(entry[1]) + C + ' | ' + W + '{}'.format(entry[0])))
+			else:
+				skipped.append(entry[0])
+
+def wm_filter():
+	global wayback_found
+
+	for entry in wayback_found:
+		if len(entry) == 0:
+			wayback_found.pop(wayback_found.index(entry))
+	wayback_found = list(set(wayback_found))
+
+	count = 0
+	for entry in wayback_found:
+		mod_entry = entry.split('/')
+		last = mod_entry[-1]
+		if '.' in last and last.startswith('.') == False:
+			mod_entry.pop(mod_entry.index(last))
+			mod_entry = '/'.join(mod_entry)
+			loc = wayback_found.index(entry)
+			wayback_found.remove(entry)
+			wayback_found.insert(loc, mod_entry)
+			count += 1
+			print(G + '[+]' + C + ' Filtering Results : ' + W + str(count), end='\r')
+	wayback_found = set(wayback_found)
+
+def dir_output(output, data):
+	global responses, found, skipped, wayback_found
 	result = {}
 
 	for entry in responses:
 		if entry != None:
 			if entry[1] in {200}:
-				print(G + '[+]' + G + ' {}'.format(str(entry[1]) + C + ' | ' + W + '{}'.format(entry[0])))
-				found.append(entry[0])
 				if output != 'None':
 					result.setdefault('Status 200', []).append(entry[0])
 			elif entry[1] in {301, 302, 303, 307, 308}:
-				print(G + '[+]' + Y + ' {}'.format(str(entry[1]) + C + ' | ' + W + '{}'.format(entry[0])))
-				found.append(entry[0])
 				if output != 'None':
 					result.setdefault('Status {}'.format(str(entry[1])), []).append(entry[0])
 			elif entry[1] in {403}:
-				print(G + '[+]' + R + ' {}'.format(str(entry[1]) + C + ' | ' + W + '{}'.format(entry[0])))
-				found.append(entry[0])
 				if output != 'None':
 					result.setdefault('Status 403', []).append(entry[0])
 			else:
-				skipped.append(entry[0])
-
-	print('\n' + G + '[+]' + C + ' Directories Found   : ' + W + str(len(found)))
+				pass
+	
+	for entry in wayback_found:
+		if len(entry) != 0:
+			result.setdefault('Wayback Machine', []).append(entry)
+	
+	print(G + '[+]' + C + ' Directories Found   : ' + W + str(len(found)))
 	print(G + '[+]' + C + ' Directories Skipped : ' + W + str(len(skipped)))
 	print(G + '[+]' + C + ' Total Requests      : ' + W + str(len(found) + len(skipped)))
+	print(G + '[+]' + C + ' Directories Found on Wayback Machine : ' + W + str(len(wayback_found)))
 
 	if output != 'None':
 		result['Directories Found'] = str(len(found))
 		result['Directories Skipped'] = str(len(skipped))
 		result['Total Requests'] = str(len(found) + len(skipped))
+		result['Directories Found on Wayback Machine'] = str(len(wayback_found))
 		data['module-Directory Search'] = result
 
 def hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data):
@@ -84,4 +174,8 @@ def hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data):
 	loop = asyncio.new_event_loop()
 	asyncio.set_event_loop(loop)
 	loop.run_until_complete(run(target, threads, tout, wdlist, redir, sslv, dserv, output, data))
+	filter_out(target)
+	loop.run_until_complete(wayback(dserv, tout))
+	wm_filter()
+	dir_output(output, data)
 	loop.close()
