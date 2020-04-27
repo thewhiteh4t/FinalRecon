@@ -41,6 +41,16 @@ FinalRecon provides detailed information such as :
 * SSL Certificate Information
 
 * Crawler
+  * html
+    * CSS
+    * Javascripts
+    * Internal Links
+    * External Links
+    * Images
+  * robots
+  * sitemaps
+  * Links inside Javascripts
+  * Links from Wayback Machine from Last 1 Year
 
 * DNS Enumeration
   * A, AAAA, ANY, CNAME, MX, NS, SOA, TXT Records
@@ -63,6 +73,7 @@ FinalRecon provides detailed information such as :
     * ICMP
 
 * Directory Searching
+  * Directories from Wayback Machine from Last 1 Year
 
 * Port Scan
   * Fast
