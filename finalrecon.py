@@ -40,7 +40,7 @@ if fail == True:
 
 import argparse
 
-version = '1.0.6'
+version = '1.0.7'
 
 parser = argparse.ArgumentParser(description='FinalRecon - The Last Recon Tool You Will Need | v{}'.format(version))
 parser.add_argument('url', help='Target URL')
@@ -56,23 +56,25 @@ parser.add_argument('--ps', help='Fast Port Scan', action='store_true')
 parser.add_argument('--full', help='Full Recon', action='store_true')
 
 ext_help = parser.add_argument_group('Extra Options')
-ext_help.add_argument('-t', type=int, help='Number of Threads [ Default : 50 ]')
-ext_help.add_argument('-T', type=float, help='Request Timeout [ Default : 10.0 ]')
+ext_help.add_argument('-t', type=int, help='Number of Threads [ Default : 30 ]')
+ext_help.add_argument('-T', type=float, help='Request Timeout [ Default : 30.0 ]')
 ext_help.add_argument('-w', help='Path to Wordlist [ Default : wordlists/dirb_common.txt ]')
 ext_help.add_argument('-r', action='store_true', help='Allow Redirect [ Default : False ]')
 ext_help.add_argument('-s', action='store_false', help='Toggle SSL Verification [ Default : True ]')
 ext_help.add_argument('-d', help='Custom DNS Servers [ Default : 1.1.1.1 ]')
+ext_help.add_argument('-e', help='File Extensions [ Example : txt, xml, php ]')
 ext_help.add_argument('-m', help='Traceroute Mode [ Default : UDP ] [ Available : TCP, ICMP ]')
 ext_help.add_argument('-p', type=int, help='Port for Traceroute [ Default : 80 / 33434 ]')
 ext_help.add_argument('-tt', type=float, help='Traceroute Timeout [ Default : 1.0 ]')
 ext_help.add_argument('-o', help='Export Output [ Default : txt ] [ Available : xml, csv ]')
 ext_help.set_defaults(
-	t=50,
-	T=10.0,
+	t=30,
+	T=30.0,
 	w='wordlists/dirb_common.txt',
 	r=False,
 	s=True,
 	d='1.1.1.1',
+	e='',
 	m='UDP',
 	p=33434,
 	tt=1.0,
@@ -95,6 +97,7 @@ wdlist = args.w
 redir = args.r
 sslv = args.s
 dserv = args.d
+filext = args.e
 subd = args.sub
 mode = args.m 
 port = args.p
@@ -167,7 +170,7 @@ def full_recon():
 	troute(ip, mode, port, tr_tout, output, data)
 	ps(ip, output, data)
 	crawler(target, output, data)
-	hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data)
+	hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext)
 
 try:
 	banner()
@@ -269,7 +272,7 @@ try:
 
 	if dirrec == True:
 		from modules.dirrec import hammer
-		hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data)
+		hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext)
 
 	if any([full, headinfo, sslinfo, whois, crawl, dns, subd, trace, pscan, dirrec]) != True:
 		print ('\n' + R + '[-] Error : ' + C + 'Atleast One Argument is Required with URL' + W)

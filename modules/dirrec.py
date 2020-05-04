@@ -32,21 +32,43 @@ async def fetch(url, session, redir, sslv):
 	except Exception as e:
 		print(R + '[-]' + C + ' Exception : ' + W + str(e).strip('\n'))
 
-async def run(target, threads, tout, wdlist, redir, sslv, dserv, output, data):
+async def run(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext):
 	global responses
 	tasks = []
-	url = target + '/{}'
-	resolver = aiohttp.AsyncResolver(nameservers=[dserv])
-	conn = aiohttp.TCPConnector(limit=threads, resolver=resolver, family=socket.AF_INET, verify_ssl=sslv)
-	timeout = aiohttp.ClientTimeout(total=None, sock_connect=tout, sock_read=tout)
-	async with aiohttp.ClientSession(connector=conn, timeout=timeout) as session:
-		with open(wdlist) as wordlist:
-			for word in wordlist:
-				word = word.strip()
-				task = asyncio.create_task(fetch(url.format(word), session, redir, sslv))
-				tasks.append(task)
-		responses = await asyncio.gather(*tasks)
-		
+	if len(filext) == 0:
+		url = target + '/{}'
+		resolver = aiohttp.AsyncResolver(nameservers=[dserv])
+		conn = aiohttp.TCPConnector(limit=threads, resolver=resolver, family=socket.AF_INET, verify_ssl=sslv)
+		timeout = aiohttp.ClientTimeout(total=None, sock_connect=tout, sock_read=tout)
+		async with aiohttp.ClientSession(connector=conn, timeout=timeout) as session:
+			with open(wdlist, 'r') as wordlist:
+				for word in wordlist:
+					word = word.strip()
+					task = asyncio.create_task(fetch(url.format(word), session, redir, sslv))
+					tasks.append(task)
+					await asyncio.sleep(0)
+			responses = await asyncio.gather(*tasks)
+	else:
+		filext = ',' + filext
+		filext = filext.split(',')
+		for ext in filext:
+			ext = ext.strip()
+			if len(ext) == 0:
+				url = target + '/{}'
+			else:
+				url = target + '/{}.' + ext
+			resolver = aiohttp.AsyncResolver(nameservers=[dserv])
+			conn = aiohttp.TCPConnector(limit=threads, resolver=resolver, family=socket.AF_INET, verify_ssl=sslv)
+			timeout = aiohttp.ClientTimeout(total=None, sock_connect=tout, sock_read=tout)
+			async with aiohttp.ClientSession(connector=conn, timeout=timeout) as session:
+				with open(wdlist, 'r') as wordlist:
+					for word in wordlist:
+						word = word.strip()
+						task = asyncio.create_task(fetch(url.format(word), session, redir, sslv))
+						tasks.append(task)
+						await asyncio.sleep(0)
+				responses = await asyncio.gather(*tasks)
+	
 async def wayback(dserv, tout):
 	global found
 	print('\n' + Y + '[!]' + C + ' Requesting Wayback Machine...' + W + '\n')
@@ -163,17 +185,21 @@ def dir_output(output, data):
 		result['Directories Found on Wayback Machine'] = str(len(wayback_found))
 		data['module-Directory Search'] = result
 
-def hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data):
+def hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext):
 	print('\n' + Y + '[!]' + Y + ' Starting Directory Search...' + W + '\n')
 	print(G + '[+]' + C + ' Threads          : ' + W + str(threads))
 	print(G + '[+]' + C + ' Timeout          : ' + W + str(tout))
 	print(G + '[+]' + C + ' Wordlist         : ' + W + wdlist)
 	print(G + '[+]' + C + ' Allow Redirects  : ' + W + str(redir))
 	print(G + '[+]' + C + ' SSL Verification : ' + W + str(sslv))
-	print(G + '[+]' + C + ' DNS Servers      : ' + W + dserv + '\n')
+	print(G + '[+]' + C + ' DNS Servers      : ' + W + dserv)
+	with open(wdlist, 'r') as wordlist:
+		num_words = sum(1 for i in wordlist)
+	print(G + '[+]' + C + ' Wordlist Size    : ' + W + str(num_words))
+	print(G + '[+]' + C + ' File Extensions  : ' + W + str(filext) + '\n')
 	loop = asyncio.new_event_loop()
 	asyncio.set_event_loop(loop)
-	loop.run_until_complete(run(target, threads, tout, wdlist, redir, sslv, dserv, output, data))
+	loop.run_until_complete(run(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext))
 	filter_out(target)
 	loop.run_until_complete(wayback(dserv, tout))
 	wm_filter()
