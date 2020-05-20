@@ -18,10 +18,16 @@
 |-|-|-|
 | [BlackArch Linux](https://blackarch.org/) | [SecBSD](https://secbsd.org/) | [Tsurugi Linux](https://tsurugi-linux.org/) |
 | ![BlackArch Linux](https://i.imgur.com/1wJVDV5.png) | ![SecBSD](https://i.imgur.com/z36xL8c.png) | ![Tsurugi Linux](https://i.imgur.com/S1ylcp7.jpg) |
+| [Ninjutsu OS](https://ninjutsu-os.github.io/) | | |
+| ![Ninjutsu OS](https://i.imgur.com/Xg54FDS.png) | | |
 
 FinalRecon is a fast and simple python script for web reconnaissance. It follows a modular structure so in future new modules can be added with ease.
 
 ## Featured
+
+### Python For OSINT
+* Hakin9 April 2020
+* https://hakin9.org/product/python-for-osint-tooling/
 
 ### NullByte
 * https://null-byte.wonderhowto.com/how-to/conduct-recon-web-target-with-python-tools-0198114/
@@ -119,6 +125,12 @@ Read More : https://developers.facebook.com/docs/facebook-login/access-tokens
 
 ```
 pacman -S finalrecon
+```
+
+### SecBSD
+
+```bash
+doas pkg_add finalrecon
 ```
 
 ### Kali Linux
