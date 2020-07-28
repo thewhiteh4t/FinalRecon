@@ -18,10 +18,16 @@
 |-|-|-|
 | [BlackArch Linux](https://blackarch.org/) | [SecBSD](https://secbsd.org/) | [Tsurugi Linux](https://tsurugi-linux.org/) |
 | ![BlackArch Linux](https://i.imgur.com/1wJVDV5.png) | ![SecBSD](https://i.imgur.com/z36xL8c.png) | ![Tsurugi Linux](https://i.imgur.com/S1ylcp7.jpg) |
+| [Ninjutsu OS](https://ninjutsu-os.github.io/) | | |
+| ![Ninjutsu OS](https://i.imgur.com/Xg54FDS.png) | | |
 
 FinalRecon is a fast and simple python script for web reconnaissance. It follows a modular structure so in future new modules can be added with ease.
 
 ## Featured
+
+### Python For OSINT
+* Hakin9 April 2020
+* https://hakin9.org/product/python-for-osint-tooling/
 
 ### NullByte
 * https://null-byte.wonderhowto.com/how-to/conduct-recon-web-target-with-python-tools-0198114/
@@ -41,6 +47,16 @@ FinalRecon provides detailed information such as :
 * SSL Certificate Information
 
 * Crawler
+  * html
+    * CSS
+    * Javascripts
+    * Internal Links
+    * External Links
+    * Images
+  * robots
+  * sitemaps
+  * Links inside Javascripts
+  * Links from Wayback Machine from Last 1 Year
 
 * DNS Enumeration
   * A, AAAA, ANY, CNAME, MX, NS, SOA, TXT Records
@@ -63,6 +79,8 @@ FinalRecon provides detailed information such as :
     * ICMP
 
 * Directory Searching
+  * Support for File Extensions
+  * Directories from Wayback Machine from Last 1 Year
 
 * Port Scan
   * Fast
@@ -109,6 +127,12 @@ Read More : https://developers.facebook.com/docs/facebook-login/access-tokens
 pacman -S finalrecon
 ```
 
+### SecBSD
+
+```bash
+doas pkg_add finalrecon
+```
+
 ### Kali Linux
 
 ```bash
@@ -130,10 +154,10 @@ docker run -it --entrypoint /bin/sh thewhiteh4t/finalrecon
 python3 finalrecon.py -h
 
 usage: finalrecon.py [-h] [--headers] [--sslinfo] [--whois] [--crawl] [--dns] [--sub] [--trace] [--dir] [--ps]
-                     [--full] [-t T] [-T T] [-w W] [-r] [-s] [-d D] [-m M] [-p P] [-tt TT] [-o O]
+                     [--full] [-t T] [-T T] [-w W] [-r] [-s] [-d D] [-e E] [-m M] [-p P] [-tt TT] [-o O]
                      url
 
-FinalRecon - OSINT Tool for All-In-One Web Recon | v1.0.2
+FinalRecon - The Last Recon Tool You Will Need | v1.0.7
 
 positional arguments:
   url         Target URL
@@ -152,12 +176,13 @@ optional arguments:
   --full      Full Recon
 
 Extra Options:
-  -t T        Number of Threads [ Default : 50 ]
-  -T T        Request Timeout [ Default : 10.0 ]
+  -t T        Number of Threads [ Default : 30 ]
+  -T T        Request Timeout [ Default : 30.0 ]
   -w W        Path to Wordlist [ Default : wordlists/dirb_common.txt ]
   -r          Allow Redirect [ Default : False ]
   -s          Toggle SSL Verification [ Default : True ]
   -d D        Custom DNS Servers [ Default : 1.1.1.1 ]
+  -e E        File Extensions [ Example : txt, xml, php ]
   -m M        Traceroute Mode [ Default : UDP ] [ Available : TCP, ICMP ]
   -p P        Port for Traceroute [ Default : 80 / 33434 ]
   -tt TT      Traceroute Timeout [ Default : 1.0 ]
@@ -180,6 +205,10 @@ python3 finalrecon.py --whois <url>
 # Crawl Target
 
 python3 finalrecon.py --crawl <url>
+
+# Directory Searching
+
+python3 finalrecon.py --dir <url> -e txt,php -w /path/to/wordlist
 
 # full scan
 

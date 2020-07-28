@@ -8,6 +8,7 @@ import asyncio
 import requests
 import threading
 import tldextract
+from datetime import date
 requests.packages.urllib3.disable_warnings()
 
 R = '\033[31m' # red
@@ -33,6 +34,7 @@ ext_total = []
 img_total = []
 js_crawl_total = []
 sm_crawl_total = []
+wayback_total = []
 
 def crawler(target, output, data):
 	global soup, r_url, sm_url
@@ -68,7 +70,8 @@ def crawler(target, output, data):
 			external_links(target),
 			images(target),
 			sm_crawl(),
-			js_crawl())
+			js_crawl(),
+			wayback(target))
 		loop.run_until_complete(tasks)
 		loop.close()
 
@@ -102,6 +105,48 @@ def url_filter(target):
 		url = target + '/' + url
 	else:
 		pass
+
+async def wayback(target):
+	global wayback_total
+	print(Y + '[!]' + C + ' Requesting Wayback Machine' + W, end = '')
+	ext = tldextract.extract(target)
+	domain = ext.registered_domain
+	domain = domain + '/*'
+
+	#today = date.today().strftime("%Y%m%d")
+	#past = date.today() + relativedelta(months=-6)
+	#past = past.strftime("%Y%m%d")
+
+	curr_yr = date.today().year
+	last_yr = curr_yr - 1
+
+	wm_url = 'http://web.archive.org/cdx/search/cdx'
+
+	data= {
+    	'url': domain,
+    	'fl': 'original',
+    	'fastLatest': 'true',
+		'from': '{}'.format(str(last_yr)),
+		'to': '{}'.format(str(curr_yr)),
+		'filter': 'statuscode:200'
+	}
+
+	try:
+		r = requests.get(wm_url, params=data)
+		r_sc = r.status_code
+		if r_sc == 200:
+			r_data = r.text
+			if len(r_data) != 0:
+				r_data = r_data.split('\n')
+				r_data = set(r_data)
+				print(G + '['.rjust(5, '.') + ' {} ]'.format(str(len(r_data))))
+				wayback_total.extend(r_data)
+			else:
+				print(R + '['.rjust(5, '.') + ' Not Found ]' + W)
+		else:
+			print(R + '['.rjust(5, '.') + ' {} ]'.format(r_sc) + W)
+	except Exception as e:
+		print('\n' + R + '[-] Exception : ' + C + str(e) + W)
 
 async def robots(target):
 	global url, r_url, r_total
@@ -140,7 +185,7 @@ async def robots(target):
 		else:
 			print(R + '['.rjust(9, '.') + ' {} ]'.format(r_sc) + W)
 	except Exception as e:
-		print(R + '[-] Exception : ' + C + str(e) + W)
+		print('\n' + R + '[-] Exception : ' + C + str(e) + W)
 
 async def sitemap():
 	global url, sm_url, total, sm_total
@@ -304,7 +349,7 @@ async def js_crawl():
 							if len(item) > 8:
 								js_crawl_total.append(item)
 		except Exception as e:
-			print(R + '[-] Exception : ' + C + str(e))
+			print('\n' + R + '[-] Exception : ' + C + str(e))
 
 	for js_url in js_total:
 		t = threading.Thread(target=fetch, args=[js_url])
@@ -330,6 +375,7 @@ def out(target, output, data):
 	total.extend(int_total)
 	total.extend(ext_total)
 	total.extend(img_total)
+	total.extend(wayback_total)
 	total = set(total)
 
 	print('\n' + G + '[+]' + C + ' Total Unique Links Extracted : ' + W + str(len(total)))
@@ -353,6 +399,7 @@ def out(target, output, data):
 					'Count ( Internal )':    str(len(int_total)),
 					'Count ( External )':    str(len(ext_total)),
 					'Count ( Images )':      str(len(img_total)),
+					'count ( Wayback Machine )': str(len(wayback_total)),
 					'Count ( Total )': str(len(total))
 				})
 			
@@ -382,3 +429,6 @@ def out(target, output, data):
 			
 			if len(img_total) != 0:
 				data['module-Crawler'].update({'Images': list(img_total)})
+			
+			if len(wayback_total) != 0:
+				data['module-Crawler'].update({'Wayback Machine': list(wayback_total)})
