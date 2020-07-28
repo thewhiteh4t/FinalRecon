@@ -102,9 +102,9 @@ async def wm_fetch(f_url, session):
 			answer = await resp.text()
 			if resp.status == 200:
 				json_ans = json.loads(answer)
-				if len(json_ans) != 0:
+				if len(json_ans) is not 0:
 					json_ans.pop(0)
-					if len(json_ans) != 0:
+					if len(json_ans) is not 0:
 						for item in json_ans:
 							addr = item[0]
 							addr = addr.replace(':80', '')
@@ -115,9 +115,9 @@ async def wm_fetch(f_url, session):
 def filter_out(target):
 	global responses, found, skipped, wayback_found
 	for entry in responses:
-		if entry != None:
+		if entry is not None:
 			if entry[1] in {200}:
-				if str(entry[0]) != target + '/':
+				if str(entry[0]) is not target + '/':
 					found.append(entry[0])
 					print(G + '[+]' + G + ' {}'.format(str(entry[1]) + C + ' | ' + W + '{}'.format(entry[0])))
 			elif entry[1] in {301, 302, 303, 307, 308}:
@@ -156,21 +156,21 @@ def dir_output(output, data):
 	result = {}
 
 	for entry in responses:
-		if entry != None:
+		if entry is not None:
 			if entry[1] in {200}:
-				if output != 'None':
+				if output is not 'None':
 					result.setdefault('Status 200', []).append(entry[0])
 			elif entry[1] in {301, 302, 303, 307, 308}:
-				if output != 'None':
+				if output is not 'None':
 					result.setdefault('Status {}'.format(str(entry[1])), []).append(entry[0])
 			elif entry[1] in {403}:
-				if output != 'None':
+				if output is not 'None':
 					result.setdefault('Status 403', []).append(entry[0])
 			else:
 				pass
 	
 	for entry in wayback_found:
-		if len(entry) != 0:
+		if len(entry) is not 0:
 			result.setdefault('Wayback Machine', []).append(entry)
 	
 	print(G + '[+]' + C + ' Directories Found   : ' + W + str(len(found)))
@@ -178,7 +178,7 @@ def dir_output(output, data):
 	print(G + '[+]' + C + ' Total Requests      : ' + W + str(len(found) + len(skipped)))
 	print(G + '[+]' + C + ' Directories Found on Wayback Machine : ' + W + str(len(wayback_found)))
 
-	if output != 'None':
+	if output is not 'None':
 		result['Directories Found'] = str(len(found))
 		result['Directories Skipped'] = str(len(skipped))
 		result['Total Requests'] = str(len(found) + len(skipped))
