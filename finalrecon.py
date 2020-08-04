@@ -21,8 +21,9 @@ if platform.system() == 'Linux':
 		pass
 else:
 	pass
+path_to_script = os.path.dirname(os.path.realpath(__file__))
 
-with open('requirements.txt', 'r') as rqr:
+with open(path_to_script + '/requirements.txt', 'r') as rqr:
 	pkg_list = rqr.read().strip().split('\n')
 
 print('\n' + G + '[+]' + C + ' Checking Dependencies...' + W + '\n')
