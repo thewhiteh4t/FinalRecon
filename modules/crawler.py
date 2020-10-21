@@ -4,6 +4,7 @@ import os
 import re
 import bs4
 import lxml
+import json
 import asyncio
 import requests
 import threading
@@ -44,20 +45,26 @@ def crawler(target, output, data):
 		rqst = requests.get(target, headers=user_agent, verify=false, timeout=10)
 	except Exception as e:
 		print(R + '[-] Exception : ' + C + str(e) + W)
-		exit()
+		return
 
 	sc = rqst.status_code
 	if sc == 200:
 		page = rqst.content
 		soup = bs4.BeautifulSoup(page, 'lxml')
 
-		ext = tldextract.extract(target)
-		hostname = '.'.join(part for part in ext if part)
 		protocol = target.split('://')
 		protocol = protocol[0]
-
-		r_url = protocol + '://' + hostname + '/robots.txt'
-		sm_url = protocol + '://' + hostname + '/sitemap.xml'
+		temp_tgt = target.split('://')[1]
+		pattern = r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5}'
+		custom = bool(re.match(pattern, temp_tgt))
+		if custom == True:
+			r_url = protocol + '://' + temp_tgt + '/robots.txt'
+			sm_url = protocol + '://' + temp_tgt + '/sitemap.xml'
+		else:
+			ext = tldextract.extract(target)
+			hostname = '.'.join(part for part in ext if part)
+			r_url = protocol + '://' + hostname + '/robots.txt'
+			sm_url = protocol + '://' + hostname + '/sitemap.xml'
 
 		loop = asyncio.new_event_loop()
 		asyncio.set_event_loop(loop)
@@ -108,10 +115,12 @@ def url_filter(target):
 
 async def wayback(target):
 	global wayback_total
-	print(Y + '[!]' + C + ' Requesting Wayback Machine' + W, end = '')
+	is_avail = False
 	ext = tldextract.extract(target)
 	domain = ext.registered_domain
-	domain = domain + '/*'
+	if len(domain) < 2:
+		domain = ext.domain
+	domain_query = domain + '/*'
 
 	#today = date.today().strftime("%Y%m%d")
 	#past = date.today() + relativedelta(months=-6)
@@ -120,33 +129,56 @@ async def wayback(target):
 	curr_yr = date.today().year
 	last_yr = curr_yr - 1
 
-	wm_url = 'http://web.archive.org/cdx/search/cdx'
-
-	data= {
-    	'url': domain,
-    	'fl': 'original',
-    	'fastLatest': 'true',
-		'from': '{}'.format(str(last_yr)),
-		'to': '{}'.format(str(curr_yr)),
-		'filter': 'statuscode:200'
-	}
+	print(Y + '[!]' + C + ' Checking Availability on Wayback Machine' + W, end = '')
+	wm_avail = 'http://archive.org/wayback/available'
+	avail_data = { 'url': domain }
 
 	try:
-		r = requests.get(wm_url, params=data)
-		r_sc = r.status_code
-		if r_sc == 200:
-			r_data = r.text
-			if len(r_data) != 0:
-				r_data = r_data.split('\n')
-				r_data = set(r_data)
-				print(G + '['.rjust(5, '.') + ' {} ]'.format(str(len(r_data))))
-				wayback_total.extend(r_data)
+		check_rqst = requests.get(wm_avail, params=avail_data, timeout=10)
+		check_sc = check_rqst.status_code
+		if check_sc == 200:
+			check_data = check_rqst.text
+			json_chk_data = json.loads(check_data)
+			avail_data = json_chk_data['archived_snapshots']
+			if len(avail_data) != 0:
+				is_avail = True
+				print(G + '['.rjust(5, '.') + ' Available ]')
 			else:
-				print(R + '['.rjust(5, '.') + ' Not Found ]' + W)
+				print(R + '['.rjust(5, '.') + ' N/A ]')
 		else:
-			print(R + '['.rjust(5, '.') + ' {} ]'.format(r_sc) + W)
+			print('\n' + R + '[-] Status : ' + C + str(check_sc) + W)
 	except Exception as e:
 		print('\n' + R + '[-] Exception : ' + C + str(e) + W)
+
+	if is_avail == True:
+		print(Y + '[!]' + C + ' Requesting Wayback Machine' + W, end = '')
+		wm_url = 'http://web.archive.org/cdx/search/cdx'
+
+		data = {
+	    	'url': domain_query,
+	    	'fl': 'original',
+	    	'fastLatest': 'true',
+			'from': '{}'.format(str(last_yr)),
+			'to': '{}'.format(str(curr_yr)),
+			'filter': 'statuscode:200'
+		}
+
+		try:
+			r = requests.get(wm_url, params=data)
+			r_sc = r.status_code
+			if r_sc == 200:
+				r_data = r.text
+				if len(r_data) != 0:
+					r_data = r_data.split('\n')
+					r_data = set(r_data)
+					print(G + '['.rjust(5, '.') + ' {} ]'.format(str(len(r_data))))
+					wayback_total.extend(r_data)
+				else:
+					print(R + '['.rjust(5, '.') + ' Not Found ]' + W)
+			else:
+				print(R + '['.rjust(5, '.') + ' {} ]'.format(r_sc) + W)
+		except Exception as e:
+			print('\n' + R + '[-] Exception : ' + C + str(e) + W)
 
 async def robots(target):
 	global url, r_url, r_total
@@ -384,10 +416,11 @@ def out(target, output, data):
 		if len(total) != 0:
 			data['module-Crawler'] = {'Total Unique Links Extracted': str(len(total))}
 			try:
-				data['module-Crawler'].update({'Title':soup.title.string})
+				target_title = soup.title.string
 			except AttributeError:
-				data['module-Crawler'].update({'Title : None'})
-			
+				target_title = 'None'
+			data['module-Crawler'].update({'Title ': str(target_title)})
+
 			data['module-Crawler'].update(
 				{
 					'Count ( Robots )':      str(len(r_total)),

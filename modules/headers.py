@@ -11,7 +11,7 @@ Y = '\033[33m' # yellow
 
 def headers(target, output, data):
 	result = {}
-	print ('\n' + G + '[+]' + Y + ' Headers :' + W + '\n')
+	print ('\n' + Y + '[!] Headers :' + W + '\n')
 	try:
 		rqst = requests.get(target, verify=False, timeout=10)
 		for k, v in rqst.headers.items():
@@ -19,7 +19,7 @@ def headers(target, output, data):
 			if output != 'None':
 				result.update({k:v})
 	except Exception as e:
-		print('\n' + R + '[-]' + C + ' Exception : ' + W + str(e) + '\n')		
+		print('\n' + R + '[-]' + C + ' Exception : ' + W + str(e) + '\n')
 		if output != 'None':
 			result.update({'Exception':str(e)})
 

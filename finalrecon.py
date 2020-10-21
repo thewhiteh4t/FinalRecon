@@ -10,7 +10,19 @@ G = '\033[32m' # green
 C = '\033[36m' # cyan
 W = '\033[0m'  # white
 
+pid_path = '/var/run/finalrecon.pid'
 fail = False
+
+if os.path.exists(pid_path):
+	print(R + '[-]' + C + ' One instance of FinalRecon is already running!' + W)
+	with open(pid_path, 'r') as pidfile:
+		pid = pidfile.read()
+	print(G + '[+]' + C + ' PID : ' + W + str(pid))
+	print(G + '[>]' + C + ' If FinalRecon crashed, execute : ' + W + 'sudo rm {}'.format(pid_path))
+	sys.exit()
+else:
+	with open(pid_path, 'w') as pidfile:
+		pidfile.write(str(os.getpid()))
 
 import platform
 if platform.system() == 'Linux':
@@ -41,7 +53,10 @@ if fail == True:
 
 import argparse
 
-version = '1.0.7'
+version = '1.0.8'
+gh_version = ''
+twitter_url = ''
+discord_url = ''
 
 parser = argparse.ArgumentParser(description='FinalRecon - The Last Recon Tool You Will Need | v{}'.format(version))
 parser.add_argument('url', help='Target URL')
@@ -62,6 +77,7 @@ ext_help.add_argument('-T', type=float, help='Request Timeout [ Default : 30.0 ]
 ext_help.add_argument('-w', help='Path to Wordlist [ Default : wordlists/dirb_common.txt ]')
 ext_help.add_argument('-r', action='store_true', help='Allow Redirect [ Default : False ]')
 ext_help.add_argument('-s', action='store_false', help='Toggle SSL Verification [ Default : True ]')
+ext_help.add_argument('-sp', type=int, help='Specify SSL Port [ Default : 443 ]')
 ext_help.add_argument('-d', help='Custom DNS Servers [ Default : 1.1.1.1 ]')
 ext_help.add_argument('-e', help='File Extensions [ Example : txt, xml, php ]')
 ext_help.add_argument('-m', help='Traceroute Mode [ Default : UDP ] [ Available : TCP, ICMP ]')
@@ -74,6 +90,7 @@ ext_help.set_defaults(
 	w='wordlists/dirb_common.txt',
 	r=False,
 	s=True,
+	sp=443,
 	d='1.1.1.1',
 	e='',
 	m='UDP',
@@ -97,14 +114,16 @@ tout = args.T
 wdlist = args.w
 redir = args.r
 sslv = args.s
+sslp = args.sp
 dserv = args.d
 filext = args.e
 subd = args.sub
-mode = args.m 
+mode = args.m
 port = args.p
 tr_tout = args.tt
 output = args.o
 
+import json
 import socket
 import requests
 import datetime
@@ -114,6 +133,31 @@ import tldextract
 type_ip = False
 data = {}
 meta = {}
+
+def fetch_meta():
+	global gh_version, twitter_url, discord_url
+	try:
+		rqst = requests.get('https://raw.githubusercontent.com/thewhiteh4t/finalrecon/master/metadata.json', timeout=5)
+		sc = rqst.status_code
+		if sc == 200:
+			metadata = rqst.text
+			json_data = json.loads(metadata)
+			gh_version = json_data['metadata']['version']
+			twitter_url = json_data['metadata']['twitter']
+			discord_url = json_data['metadata']['discord']
+		else:
+			with open('metadata.json', 'r') as metadata:
+				json_data = json.loads(metadata.read())
+				gh_version = json_data['metadata']['version']
+				twitter_url = json_data['metadata']['twitter']
+				discord_url = json_data['metadata']['discord']
+	except Exception as exc:
+		print('\n' + R + '[-]' + C + ' Exception : ' + W + str(exc))
+		with open('metadata.json', 'r') as metadata:
+			json_data = json.loads(metadata.read())
+			gh_version = json_data['metadata']['version']
+			twitter_url = json_data['metadata']['twitter']
+			discord_url = json_data['metadata']['discord']
 
 def banner():
 	banner = r'''
@@ -127,28 +171,18 @@ def banner():
 \ \  __< \ \  __\ \ \ \____\ \ \/\ \\ \ \-.  \
  \ \_\ \_\\ \_____\\ \_____\\ \_____\\ \_\\"\_\
   \/_/ /_/ \/_____/ \/_____/ \/_____/ \/_/ \/_/'''
-	print (G + banner + W + '\n')
-	print (G + '[>]' + C + ' Created By : ' + W + 'thewhiteh4t')
-	print (G + '[>]' + C + ' Version    : ' + W + version + '\n')
+	print(G + banner + W + '\n')
+	print(G + '[>]' + C + ' Created By : ' + W + 'thewhiteh4t')
+	print(G + ' |---> ' + C + 'Twitter : ' + W + twitter_url)
+	print(G + ' |---> ' + C + 'Discord : ' + W + discord_url)
+	print(G + '[>]' + C + ' Version    : ' + W + version + '\n')
 
 def ver_check():
 	print(G + '[+]' + C + ' Checking for Updates...', end='')
-	ver_url = 'https://raw.githubusercontent.com/thewhiteh4t/finalrecon/master/version.txt'
-	try:
-		ver_rqst = requests.get(ver_url, timeout=5)
-		ver_sc = ver_rqst.status_code
-		if ver_sc == 200:
-			github_ver = ver_rqst.text
-			github_ver = github_ver.strip()
-			if version == github_ver:
-				print(C + '[' + G + ' Up-To-Date ' + C +']' + '\n')
-			else:
-				print(C + '[' + G + ' Available : {} '.format(github_ver) + C + ']' + '\n')
-		else:
-			print(C + '[' + R + ' Status : {} '.format(ver_sc) + C + ']' + '\n')
-	except Exception as e:
-		print('\n\n' + R + '[-]' + C + ' Exception : ' + W + str(e))
-		sys.exit()
+	if version == gh_version:
+		print(C + '[' + G + ' Up-To-Date ' + C +']' + '\n')
+	else:
+		print(C + '[' + G + ' Available : {} '.format(gh_version) + C + ']' + '\n')
 
 def full_recon():
 	from modules.sslinfo import cert
@@ -161,7 +195,7 @@ def full_recon():
 	from modules.portscan import ps
 	from modules.subdom import subdomains
 	headers(target, output, data)
-	cert(hostname, output, data)
+	cert(hostname, sslp, output, data)
 	whois_lookup(ip, output, data)
 	dnsrec(domain, output, data)
 	if type_ip == False:
@@ -174,6 +208,7 @@ def full_recon():
 	hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext)
 
 try:
+	fetch_meta()
 	banner()
 	ver_check()
 
@@ -202,12 +237,9 @@ try:
 			ip = socket.gethostbyname(hostname)
 			print ('\n' + G + '[+]' + C + ' IP Address : ' + W + str(ip))
 		except Exception as e:
-			print ('\n' + R + '[+]' + C + ' Unable to Get IP : ' + W + str(e))
-			if '[Errno -2]' in str(e):
-				sys.exit()
-			else:
-				pass
-	
+			print ('\n' + R + '[-]' + C + ' Unable to Get IP : ' + W + str(e))
+			sys.exit()
+
 	start_time = datetime.datetime.now()
 
 	meta.update({'Version': str(version)})
@@ -236,7 +268,7 @@ try:
 
 	if sslinfo == True:
 		from modules.sslinfo import cert
-		cert(hostname, output, data)
+		cert(hostname, sslp, output, data)
 
 	if whois == True:
 		from modules.whois import whois_lookup
@@ -279,7 +311,7 @@ try:
 		print ('\n' + R + '[-] Error : ' + C + 'Atleast One Argument is Required with URL' + W)
 		output = 'None'
 		sys.exit()
-	
+
 	end_time = datetime.datetime.now() - start_time
 	print ('\n' + G + '[+]' + C + ' Completed in ' + W + str(end_time) + '\n')
 
@@ -291,7 +323,9 @@ try:
 			output['export'] = True
 			export(output, data)
 
+	os.remove(pid_path)
 	sys.exit()
 except KeyboardInterrupt:
 	print (R + '[-]' + C + ' Keyboard Interrupt.' + W + '\n')
+	os.remove(pid_path)
 	sys.exit()
