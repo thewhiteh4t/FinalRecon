@@ -13,6 +13,16 @@ W = '\033[0m'  # white
 pid_path = '/var/run/finalrecon.pid'
 fail = False
 
+import platform
+if platform.system() == 'Linux':
+	if os.geteuid() != 0:
+		print('\n' + R + '[-]' + C + ' Please Run as Root!' + '\n')
+		sys.exit()
+	else:
+		pass
+else:
+	pass
+
 if os.path.exists(pid_path):
 	print(R + '[-]' + C + ' One instance of FinalRecon is already running!' + W)
 	with open(pid_path, 'r') as pidfile:
@@ -24,15 +34,6 @@ else:
 	with open(pid_path, 'w') as pidfile:
 		pidfile.write(str(os.getpid()))
 
-import platform
-if platform.system() == 'Linux':
-	if os.geteuid() != 0:
-		print('\n' + R + '[-]' + C + ' Please Run as Root!' + '\n')
-		sys.exit()
-	else:
-		pass
-else:
-	pass
 path_to_script = os.path.dirname(os.path.realpath(__file__))
 
 with open(path_to_script + '/requirements.txt', 'r') as rqr:
