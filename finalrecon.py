@@ -50,16 +50,17 @@ for pkg in pkg_list:
 		pass
 if fail == True:
 	print('\n' + R + '[-]' + C + ' Please Execute ' + W + 'pip3 install -r requirements.txt' + C + ' to Install Missing Packages' + W + '\n')
+	os.remove(pid_path)
 	sys.exit()
 
 import argparse
 
-version = '1.0.8'
+version = '1.0.9'
 gh_version = ''
 twitter_url = ''
 discord_url = ''
 
-parser = argparse.ArgumentParser(description='FinalRecon - The Last Recon Tool You Will Need | v{}'.format(version))
+parser = argparse.ArgumentParser(description='FinalRecon - The Last Web Recon Tool You Will Need | v{}'.format(version))
 parser.add_argument('url', help='Target URL')
 parser.add_argument('--headers', help='Header Information', action='store_true')
 parser.add_argument('--sslinfo', help='SSL Certificate Information', action='store_true')
@@ -99,7 +100,12 @@ ext_help.set_defaults(
 	tt=1.0,
 	o='txt')
 
-args = parser.parse_args()
+try:
+	args = parser.parse_args()
+except SystemExit:
+	os.remove(pid_path)
+	sys.exit()
+
 target = args.url
 headinfo = args.headers
 sslinfo = args.sslinfo
@@ -215,6 +221,7 @@ try:
 
 	if target.startswith(('http', 'https')) == False:
 		print(R + '[-]' + C + ' Protocol Missing, Include ' + W + 'http://' + C + ' or ' + W + 'https://' + '\n')
+		os.remove(pid_path)
 		sys.exit()
 	else:
 		pass
@@ -239,6 +246,7 @@ try:
 			print ('\n' + G + '[+]' + C + ' IP Address : ' + W + str(ip))
 		except Exception as e:
 			print ('\n' + R + '[-]' + C + ' Unable to Get IP : ' + W + str(e))
+			os.remove(pid_path)
 			sys.exit()
 
 	start_time = datetime.datetime.now()
@@ -288,6 +296,7 @@ try:
 		subdomains(domain, tout, output, data)
 	elif subd == True and type_ip == True:
 		print(R + '[-]' + C + ' Sub-Domain Enumeration is Not Supported for IP Addresses' + W + '\n')
+		os.remove(pid_path)
 		sys.exit()
 	else:
 		pass
@@ -309,8 +318,9 @@ try:
 		hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext)
 
 	if any([full, headinfo, sslinfo, whois, crawl, dns, subd, trace, pscan, dirrec]) != True:
-		print ('\n' + R + '[-] Error : ' + C + 'Atleast One Argument is Required with URL' + W)
+		print ('\n' + R + '[-] Error : ' + C + 'At least One Argument is Required with URL' + W)
 		output = 'None'
+		os.remove(pid_path)
 		sys.exit()
 
 	end_time = datetime.datetime.now() - start_time
