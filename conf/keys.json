@@ -1,7 +1,3 @@
 {
-    "api_keys": [
-        {
-            "facebook": null
-        }
-    ]
+	"facebook": null
 }

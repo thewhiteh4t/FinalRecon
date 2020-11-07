@@ -122,10 +122,10 @@ async def fb_cert(hostname, tout):
 	global found
 	with open('conf/keys.json', 'r') as keyfile:
 		json_read = keyfile.read()
-	
+
 	json_load = json.loads(json_read)
-	fb_key = json_load['api_keys'][0]['facebook']
-	
+	fb_key = json_load['facebook']
+
 	if fb_key != None:
 		print(Y + '[!]' + C + ' Requesting ' + G + 'Facebook' + W)
 		url = 'https://graph.facebook.com/certificates'
@@ -135,7 +135,7 @@ async def fb_cert(hostname, tout):
     		'access_token': fb_key
 		}
 
-		r = requests.get(url, params=data)
+		r = requests.get(url, params=data, timeout=tout)
 		json_data = r.text
 		json_read = json.loads(json_data)
 		domains = json_read['data']
@@ -174,7 +174,7 @@ def subdomains(hostname, tout, output, data):
 		for url in found:
 			print(G + '[+] ' + C + url)
 
-	print('\n' + G + '[+]' + C + ' Total Found : ' + W + str(total))
+	print('\n' + G + '[+]' + C + ' Total Unique Sub Domains Found : ' + W + str(total))
 
 	if output != 'None':
 		result['Links'] = list(found)
@@ -182,4 +182,4 @@ def subdomains(hostname, tout, output, data):
 
 def subd_output(output, data, result, total):
 	data['module-Subdomain Enumeration'] = result
-	data['module-Subdomain Enumeration'].update({'Total Found': str(total)})
+	data['module-Subdomain Enumeration'].update({'Total Unique Sub Domains Found': str(total)})

@@ -10,18 +10,8 @@ G = '\033[32m' # green
 C = '\033[36m' # cyan
 W = '\033[0m'  # white
 
-pid_path = '/var/run/finalrecon.pid'
+pid_path = '/tmp/finalrecon.pid'
 fail = False
-
-import platform
-if platform.system() == 'Linux':
-	if os.geteuid() != 0:
-		print('\n' + R + '[-]' + C + ' Please Run as Root!' + '\n')
-		sys.exit()
-	else:
-		pass
-else:
-	pass
 
 if os.path.exists(pid_path):
 	print(R + '[-]' + C + ' One instance of FinalRecon is already running!' + W)
@@ -55,7 +45,7 @@ if fail == True:
 
 import argparse
 
-version = '1.0.9'
+version = '1.1.0'
 gh_version = ''
 twitter_url = ''
 discord_url = ''

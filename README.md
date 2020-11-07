@@ -106,9 +106,17 @@ If you dont want to use a key for a certain data source just set its value to `n
 
 #### Facebook Developers API
 
-This data source is used to fetch **Certificate Transparency** data which is used in **Subdomain Enumeration**
+This data source is used to fetch **Certificate Transparency** data which is used in **Sub Domain Enumeration**
 
 Key Format : `APP-ID|APP-SECRET`
+
+Example :
+
+```
+{
+  "facebook": "9go1kx9icpua5cm|20yhraldrxt6fi6z43r3a6ci2vckkst3"
+}
+```
 
 Read More : https://developers.facebook.com/docs/facebook-login/access-tokens
 
@@ -153,11 +161,12 @@ docker run -it --entrypoint /bin/sh thewhiteh4t/finalrecon
 ```bash
 python3 finalrecon.py -h
 
-usage: finalrecon.py [-h] [--headers] [--sslinfo] [--whois] [--crawl] [--dns] [--sub] [--trace] [--dir] [--ps]
-                     [--full] [-t T] [-T T] [-w W] [-r] [-s] [-d D] [-e E] [-m M] [-p P] [-tt TT] [-o O]
+usage: finalrecon.py [-h] [--headers] [--sslinfo] [--whois] [--crawl] [--dns] [--sub]
+                     [--trace] [--dir] [--ps] [--full] [-t T] [-T T] [-w W] [-r] [-s]
+                     [-sp SP] [-d D] [-e E] [-m M] [-p P] [-tt TT] [-o O]
                      url
 
-FinalRecon - The Last Recon Tool You Will Need | v1.0.7
+FinalRecon - The Last Web Recon Tool You Will Need | v1.1.0
 
 positional arguments:
   url         Target URL
@@ -181,6 +190,7 @@ Extra Options:
   -w W        Path to Wordlist [ Default : wordlists/dirb_common.txt ]
   -r          Allow Redirect [ Default : False ]
   -s          Toggle SSL Verification [ Default : True ]
+  -sp SP      Specify SSL Port [ Default : 443 ]
   -d D        Custom DNS Servers [ Default : 1.1.1.1 ]
   -e E        File Extensions [ Example : txt, xml, php ]
   -m M        Traceroute Mode [ Default : UDP ] [ Available : TCP, ICMP ]
