@@ -14,14 +14,24 @@
   <a href="https://thewhiteh4t.github.io"><b>thewhiteh4t's Blog</b></a>
 </p>
 
-| Available | in | |
-|-|-|-|
-| [BlackArch Linux](https://blackarch.org/) | [SecBSD](https://secbsd.org/) | [Tsurugi Linux](https://tsurugi-linux.org/) |
-| ![BlackArch Linux](https://i.imgur.com/1wJVDV5.png) | ![SecBSD](https://i.imgur.com/z36xL8c.png) | ![Tsurugi Linux](https://i.imgur.com/S1ylcp7.jpg) |
-| [TraceLabs OSINT VM](https://www.tracelabs.org/initiatives/osint-vm) | | |
-| ![TraceLabs OSINT VM](https://i.imgur.com/E6Z8Jl9.png) | | |
+FinalRecon is an **automatic web reconnaissance** tool written in python. Goal of FinalRecon is to provide an **overview** of the target in a **short** amount of time while maintaining the **accuracy** of results. Instead of executing **several tools** one after another it can provide similar results keeping dependencies **small and simple**.
 
-FinalRecon is a fast and simple python script for web reconnaissance. It follows a modular structure so in future new modules can be added with ease.
+## Available In
+
+<p align="center">
+  <a href="https://blackarch.org/">
+    <img width="150px" hspace="10px" src="https://i.imgur.com/YZ5KDL1.png" alt="blackarch finalrecon">
+  </a>
+  <a href="https://secbsd.org/">
+    <img width="150px" hspace="10px" src="https://i.imgur.com/z36xL8c.png" alt="secbsd finalrecon">
+  </a>
+  <a href="https://tsurugi-linux.org/">
+    <img width="150px" hspace="10px" src="https://i.imgur.com/S1ylcp7.jpg" alt="tsurugi linux finalrecon">
+  </a>
+  <a href="https://www.tracelabs.org/initiatives/osint-vm">
+    <img width="150px" hspace="10px" src="https://i.imgur.com/COAbvYr.png" alt="tracelabs finalrecon">
+  </a>
+</p>
 
 ## Featured
 
