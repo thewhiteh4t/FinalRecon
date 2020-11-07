@@ -259,7 +259,10 @@ try:
 	data['module-FinalRecon'] = meta
 
 	if output != 'None':
-		fname = os.getcwd() + '/dumps/' + hostname + '.' + output
+		fpath = os.getenv('HOME') + '/.local/share/finalrecon/dumps/'
+		fname = fpath + hostname + '.' + output
+		if not os.path.exists(fpath):
+				os.makedirs(fpath)
 		output = {
 			'format': output,
 			'file': fname,
