@@ -14,14 +14,24 @@
   <a href="https://thewhiteh4t.github.io"><b>thewhiteh4t's Blog</b></a>
 </p>
 
-| Available | in | |
-|-|-|-|
-| [BlackArch Linux](https://blackarch.org/) | [SecBSD](https://secbsd.org/) | [Tsurugi Linux](https://tsurugi-linux.org/) |
-| ![BlackArch Linux](https://i.imgur.com/1wJVDV5.png) | ![SecBSD](https://i.imgur.com/z36xL8c.png) | ![Tsurugi Linux](https://i.imgur.com/S1ylcp7.jpg) |
-| [Ninjutsu OS](https://ninjutsu-os.github.io/) | | |
-| ![Ninjutsu OS](https://i.imgur.com/Xg54FDS.png) | | |
+FinalRecon is an **automatic web reconnaissance** tool written in python. Goal of FinalRecon is to provide an **overview** of the target in a **short** amount of time while maintaining the **accuracy** of results. Instead of executing **several tools** one after another it can provide similar results keeping dependencies **small and simple**.
 
-FinalRecon is a fast and simple python script for web reconnaissance. It follows a modular structure so in future new modules can be added with ease.
+## Available In
+
+<p align="center">
+  <a href="https://blackarch.org/">
+    <img width="150px" hspace="10px" src="https://i.imgur.com/YZ5KDL1.png" alt="blackarch finalrecon">
+  </a>
+  <a href="https://secbsd.org/">
+    <img width="150px" hspace="10px" src="https://i.imgur.com/z36xL8c.png" alt="secbsd finalrecon">
+  </a>
+  <a href="https://tsurugi-linux.org/">
+    <img width="150px" hspace="10px" src="https://i.imgur.com/S1ylcp7.jpg" alt="tsurugi linux finalrecon">
+  </a>
+  <a href="https://www.tracelabs.org/initiatives/osint-vm">
+    <img width="150px" hspace="10px" src="https://i.imgur.com/COAbvYr.png" alt="tracelabs finalrecon">
+  </a>
+</p>
 
 ## Featured
 
@@ -106,9 +116,17 @@ If you dont want to use a key for a certain data source just set its value to `n
 
 #### Facebook Developers API
 
-This data source is used to fetch **Certificate Transparency** data which is used in **Subdomain Enumeration**
+This data source is used to fetch **Certificate Transparency** data which is used in **Sub Domain Enumeration**
 
 Key Format : `APP-ID|APP-SECRET`
+
+Example :
+
+```
+{
+  "facebook": "9go1kx9icpua5cm|20yhraldrxt6fi6z43r3a6ci2vckkst3"
+}
+```
 
 Read More : https://developers.facebook.com/docs/facebook-login/access-tokens
 
@@ -153,11 +171,12 @@ docker run -it --entrypoint /bin/sh thewhiteh4t/finalrecon
 ```bash
 python3 finalrecon.py -h
 
-usage: finalrecon.py [-h] [--headers] [--sslinfo] [--whois] [--crawl] [--dns] [--sub] [--trace] [--dir] [--ps]
-                     [--full] [-t T] [-T T] [-w W] [-r] [-s] [-d D] [-e E] [-m M] [-p P] [-tt TT] [-o O]
+usage: finalrecon.py [-h] [--headers] [--sslinfo] [--whois] [--crawl] [--dns] [--sub]
+                     [--trace] [--dir] [--ps] [--full] [-t T] [-T T] [-w W] [-r] [-s]
+                     [-sp SP] [-d D] [-e E] [-m M] [-p P] [-tt TT] [-o O]
                      url
 
-FinalRecon - The Last Recon Tool You Will Need | v1.0.7
+FinalRecon - The Last Web Recon Tool You Will Need | v1.1.0
 
 positional arguments:
   url         Target URL
@@ -181,6 +200,7 @@ Extra Options:
   -w W        Path to Wordlist [ Default : wordlists/dirb_common.txt ]
   -r          Allow Redirect [ Default : False ]
   -s          Toggle SSL Verification [ Default : True ]
+  -sp SP      Specify SSL Port [ Default : 443 ]
   -d D        Custom DNS Servers [ Default : 1.1.1.1 ]
   -e E        File Extensions [ Example : txt, xml, php ]
   -m M        Traceroute Mode [ Default : UDP ] [ Available : TCP, ICMP ]

@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+import os
 import socket
 import struct
 import icmplib
+import platform
 import threading
 
 R = '\033[31m' # red
@@ -22,9 +24,9 @@ def icmp_trace(ip, tr_tout, output, collect):
 		except socket.herror:
 			hop_host = 'Unknown'
 		print(G + hop_index.ljust(7) + C + hop_addr.ljust(17) + W + hop_host)
-		
+
 		if output != 'None':
-			collect.setdefault('Result', []).append([str(hop_index), str(hop_addr), str(hop_host)])	
+			collect.setdefault('Result', []).append([str(hop_index), str(hop_addr), str(hop_host)])
 
 def udp_trace(ip, port, tr_tout, output, collect):
 	status = {'end': False}
@@ -56,7 +58,7 @@ def udp_send(ip, port, ttl, rx, status, tr_tout, output, collect):
 		curr_addr = '* * *'
 	finally:
 		tx.close()
-	
+
 	hop_index = str(ttl)
 	hop_addr = curr_addr
 	if hop_addr != '* * *':
@@ -97,7 +99,7 @@ def tcp_send(ip, port, ttl, rx, status, tr_tout, output, collect):
 	tx.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, struct.pack('I', ttl))
 	tx.setblocking(0)
 	tx.settimeout(tr_tout)
-	
+
 	while True:
 		try:
 			try:
@@ -136,6 +138,16 @@ def tcp_send(ip, port, ttl, rx, status, tr_tout, output, collect):
 			break
 
 def troute(ip, mode, port, tr_tout, output, data):
+
+	if platform.system() == 'Linux':
+		if os.geteuid() != 0:
+			print('\n' + R + '[-]' + C + ' Root privileges are required for Traceroute, skipping...' + W)
+			return
+		else:
+			pass
+	else:
+		pass
+
 	collect = {}
 
 	print('\n' + G + '[+]' + C + ' Port    : ' + W + str(port))
@@ -152,7 +164,7 @@ def troute(ip, mode, port, tr_tout, output, data):
 		tcp_trace(ip, port, tr_tout, output, collect)
 	else:
 		print('\n' + R + '[-]' + C + ' Invalid Mode Selected!' + W)
-	
+
 	if output != 'None':
 		collect['Protocol'] = mode
 		collect['Port'] = str(port)
