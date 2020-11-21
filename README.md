@@ -19,6 +19,9 @@ FinalRecon is an **automatic web reconnaissance** tool written in python. Goal o
 ## Available In
 
 <p align="center">
+  <a href="https://www.kali.org/news/kali-linux-2020-4-release/">
+    <img width="150px" hspace="10px" src="https://i.imgur.com/yQRrCtC.png" alt="kali linux finalrecon">
+  </a>
   <a href="https://blackarch.org/">
     <img width="150px" hspace="10px" src="https://i.imgur.com/YZ5KDL1.png" alt="blackarch finalrecon">
   </a>
@@ -139,10 +142,16 @@ Read More : https://developers.facebook.com/docs/facebook-login/access-tokens
 
 ## Installation
 
+### Kali Linux
+
+```
+sudo apt install finalrecon
+```
+
 ### BlackArch Linux
 
 ```
-pacman -S finalrecon
+sudo pacman -S finalrecon
 ```
 
 ### SecBSD
@@ -151,7 +160,7 @@ pacman -S finalrecon
 doas pkg_add finalrecon
 ```
 
-### Kali Linux
+### Other Linux
 
 ```bash
 git clone https://github.com/thewhiteh4t/FinalRecon.git
