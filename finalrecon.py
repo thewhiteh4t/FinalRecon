@@ -18,7 +18,7 @@ path_to_script = os.path.dirname(os.path.realpath(__file__))
 src_conf_path = path_to_script + '/conf/'
 fail = False
 
-if os.path.exists(pid_path):
+if os.path.isfile(pid_path):
 	print(R + '[-]' + C + ' One instance of FinalRecon is already running!' + W)
 	with open(pid_path, 'r') as pidfile:
 		pid = pidfile.read()
@@ -26,6 +26,7 @@ if os.path.exists(pid_path):
 	print(G + '[>]' + C + ' If FinalRecon crashed, execute : ' + W + 'rm {}'.format(pid_path))
 	sys.exit()
 else:
+	os.makedirs(os.path.dirname(pid_path), exist_ok=True)
 	with open(pid_path, 'w') as pidfile:
 		pidfile.write(str(os.getpid()))
 
@@ -54,7 +55,7 @@ if fail == True:
 
 import argparse
 
-version = '1.1.1'
+version = '1.1.2'
 gh_version = ''
 twitter_url = ''
 discord_url = ''
