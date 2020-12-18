@@ -19,6 +19,9 @@ FinalRecon is an **automatic web reconnaissance** tool written in python. Goal o
 ## Available In
 
 <p align="center">
+  <a href="https://www.kali.org/news/kali-linux-2020-4-release/">
+    <img width="150px" hspace="10px" src="https://i.imgur.com/yQRrCtC.png" alt="kali linux finalrecon">
+  </a>
   <a href="https://blackarch.org/">
     <img width="150px" hspace="10px" src="https://i.imgur.com/YZ5KDL1.png" alt="blackarch finalrecon">
   </a>
@@ -81,6 +84,9 @@ FinalRecon provides detailed information such as :
     * ThreatMiner
     * Facebook Certificate Transparency API
       * Auth Token is Required for this source, read Configuration below
+    * VirusTotal
+    	* API Key is Required
+    * CertSpotter
 
 * Traceroute
   * Protocols
@@ -110,7 +116,7 @@ FinalRecon provides detailed information such as :
 Some Modules Use API Keys to fetch data from different resources, these are optional, if you are not using an API key, they will be simply skipped.
 If you are interested in using these resources you can store your API key in **keys.json** file.
 
-`Path --> finalrecon/conf/keys.json`
+`Path --> $HOME/.config/finalrecon/conf/keys.json`
 
 If you dont want to use a key for a certain data source just set its value to `null`, by default values of all available data sources are null.
 
@@ -130,6 +136,20 @@ Example :
 
 Read More : https://developers.facebook.com/docs/facebook-login/access-tokens
 
+#### VirusTotal API
+
+This data source is used to fetch **Sub Domains** which are used in **Sub Domain Enumeration**
+
+Key Format : `KEY`
+
+Example :
+
+```
+{
+	"virustotal": "eu4zc5f0skv15fnw54nkhj4m26zbteh9409aklpxhfpp68s8d4l63pn13rsojt9y"
+}
+```
+
 ## Tested on
 
 * Kali Linux
@@ -139,10 +159,16 @@ Read More : https://developers.facebook.com/docs/facebook-login/access-tokens
 
 ## Installation
 
+### Kali Linux
+
+```
+sudo apt install finalrecon
+```
+
 ### BlackArch Linux
 
 ```
-pacman -S finalrecon
+sudo pacman -S finalrecon
 ```
 
 ### SecBSD
@@ -151,7 +177,7 @@ pacman -S finalrecon
 doas pkg_add finalrecon
 ```
 
-### Kali Linux
+### Other Linux
 
 ```bash
 git clone https://github.com/thewhiteh4t/FinalRecon.git

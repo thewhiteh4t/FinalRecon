@@ -10,21 +10,31 @@ G = '\033[32m' # green
 C = '\033[36m' # cyan
 W = '\033[0m'  # white
 
-pid_path = '/tmp/finalrecon.pid'
+home = os.getenv('HOME')
+pid_path = home + '/.local/share/finalrecon/finalrecon.pid'
+usr_data = home + '/.local/share/finalrecon/dumps/'
+conf_path = home + '/.config/finalrecon'
+path_to_script = os.path.dirname(os.path.realpath(__file__))
+src_conf_path = path_to_script + '/conf/'
 fail = False
 
-if os.path.exists(pid_path):
+if os.path.isfile(pid_path):
 	print(R + '[-]' + C + ' One instance of FinalRecon is already running!' + W)
 	with open(pid_path, 'r') as pidfile:
 		pid = pidfile.read()
 	print(G + '[+]' + C + ' PID : ' + W + str(pid))
-	print(G + '[>]' + C + ' If FinalRecon crashed, execute : ' + W + 'sudo rm {}'.format(pid_path))
+	print(G + '[>]' + C + ' If FinalRecon crashed, execute : ' + W + 'rm {}'.format(pid_path))
 	sys.exit()
 else:
+	os.makedirs(os.path.dirname(pid_path), exist_ok=True)
 	with open(pid_path, 'w') as pidfile:
 		pidfile.write(str(os.getpid()))
 
-path_to_script = os.path.dirname(os.path.realpath(__file__))
+if os.path.exists(conf_path):
+	pass
+else:
+	import shutil
+	shutil.copytree(src_conf_path, conf_path, dirs_exist_ok=True)
 
 with open(path_to_script + '/requirements.txt', 'r') as rqr:
 	pkg_list = rqr.read().strip().split('\n')
@@ -45,7 +55,7 @@ if fail == True:
 
 import argparse
 
-version = '1.1.0'
+version = '1.1.2'
 gh_version = ''
 twitter_url = ''
 discord_url = ''
@@ -77,18 +87,18 @@ ext_help.add_argument('-p', type=int, help='Port for Traceroute [ Default : 80 /
 ext_help.add_argument('-tt', type=float, help='Traceroute Timeout [ Default : 1.0 ]')
 ext_help.add_argument('-o', help='Export Output [ Default : txt ] [ Available : xml, csv ]')
 ext_help.set_defaults(
-	t=30,
-	T=30.0,
-	w='wordlists/dirb_common.txt',
-	r=False,
-	s=True,
-	sp=443,
-	d='1.1.1.1',
-	e='',
-	m='UDP',
-	p=33434,
-	tt=1.0,
-	o='txt')
+	t = 30,
+	T = 30.0,
+	w = path_to_script + '/wordlists/dirb_common.txt',
+	r = False,
+	s = True,
+	sp = 443,
+	d = '1.1.1.1',
+	e = '',
+	m = 'UDP',
+	p = 33434,
+	tt = 1.0,
+	o = 'txt')
 
 try:
 	args = parser.parse_args()
@@ -196,7 +206,7 @@ def full_recon():
 	whois_lookup(ip, output, data)
 	dnsrec(domain, output, data)
 	if type_ip == False:
-		subdomains(domain, tout, output, data)
+		subdomains(domain, tout, output, data, conf_path)
 	else:
 		pass
 	troute(ip, mode, port, tr_tout, output, data)
@@ -249,7 +259,7 @@ try:
 	data['module-FinalRecon'] = meta
 
 	if output != 'None':
-		fpath = os.getenv('HOME') + '/.local/share/finalrecon/dumps/'
+		fpath = usr_data
 		fname = fpath + hostname + '.' + output
 		if not os.path.exists(fpath):
 				os.makedirs(fpath)
@@ -286,7 +296,7 @@ try:
 
 	if subd == True and type_ip == False:
 		from modules.subdom import subdomains
-		subdomains(domain, tout, output, data)
+		subdomains(domain, tout, output, data, conf_path)
 	elif subd == True and type_ip == True:
 		print(R + '[-]' + C + ' Sub-Domain Enumeration is Not Supported for IP Addresses' + W + '\n')
 		os.remove(pid_path)
