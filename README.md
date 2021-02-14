@@ -22,17 +22,11 @@ FinalRecon is an **automatic web reconnaissance** tool written in python. Goal o
   <a href="https://www.kali.org/news/kali-linux-2020-4-release/">
     <img width="150px" hspace="10px" src="https://i.imgur.com/yQRrCtC.png" alt="kali linux finalrecon">
   </a>
-  <a href="https://blackarch.org/">
-    <img width="150px" hspace="10px" src="https://i.imgur.com/YZ5KDL1.png" alt="blackarch finalrecon">
+  <a href="https://ubuntu.com/">
+    <img width="150px" hspace="10px" src="https://github.com/esjoker/Cyanide-Framework_v0.2/blob/main/Images/download.png" alt="Ubuntu">
   </a>
-  <a href="https://secbsd.org/">
-    <img width="150px" hspace="10px" src="https://i.imgur.com/z36xL8c.png" alt="secbsd finalrecon">
-  </a>
-  <a href="https://tsurugi-linux.org/">
-    <img width="150px" hspace="10px" src="https://i.imgur.com/S1ylcp7.jpg" alt="tsurugi linux finalrecon">
-  </a>
-  <a href="https://www.tracelabs.org/initiatives/osint-vm">
-    <img width="150px" hspace="10px" src="https://i.imgur.com/COAbvYr.png" alt="tracelabs finalrecon">
+  <a href="https://www.parrotsec.org/">
+    <img width="150px" hspace="10px" src="https://github.com/esjoker/Cyanide-Framework_v0.2/blob/main/Images/download1.jpg" alt="ParrotSecOs">
   </a>
 </p>
 
