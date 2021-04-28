@@ -34,6 +34,7 @@ if os.path.exists(conf_path):
 	pass
 else:
 	import shutil
+	os.makedirs(conf_path + '/', exist_ok=True)
 	shutil.copytree(src_conf_path, conf_path, dirs_exist_ok=True)
 
 with open(path_to_script + '/requirements.txt', 'r') as rqr:
