@@ -43,6 +43,8 @@ print('\n' + G + '[+]' + C + ' Checking Dependencies...' + W + '\n')
 
 for pkg in pkg_list:
 	spec = importlib.util.find_spec(pkg)
+	if spec is None and pkg == "psycopg2-binary":
+		spec = importlib.util.find_spec("psycopg2")
 	if spec is None:
 		print(R + '[-]' + W + ' {}'.format(pkg) + C + ' is not Installed!' + W)
 		fail = True
