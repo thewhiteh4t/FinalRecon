@@ -24,7 +24,7 @@ if os.path.isfile(pid_path):
 		pid = pidfile.read()
 	print(G + '[+]' + C + ' PID : ' + W + str(pid))
 	print(G + '[>]' + C + ' If FinalRecon crashed, execute : ' + W + 'rm {}'.format(pid_path))
-	sys.exit()
+	sys.exit(1)
 else:
 	os.makedirs(os.path.dirname(pid_path), exist_ok=True)
 	with open(pid_path, 'w') as pidfile:
@@ -53,7 +53,7 @@ for pkg in pkg_list:
 if fail == True:
 	print('\n' + R + '[-]' + C + ' Please Execute ' + W + 'pip3 install -r requirements.txt' + C + ' to Install Missing Packages' + W + '\n')
 	os.remove(pid_path)
-	sys.exit()
+	sys.exit(1)
 
 import argparse
 
@@ -224,7 +224,7 @@ try:
 	if target.startswith(('http', 'https')) == False:
 		print(R + '[-]' + C + ' Protocol Missing, Include ' + W + 'http://' + C + ' or ' + W + 'https://' + '\n')
 		os.remove(pid_path)
-		sys.exit()
+		sys.exit(1)
 	else:
 		pass
 
@@ -249,7 +249,7 @@ try:
 		except Exception as e:
 			print ('\n' + R + '[-]' + C + ' Unable to Get IP : ' + W + str(e))
 			os.remove(pid_path)
-			sys.exit()
+			sys.exit(1)
 
 	start_time = datetime.datetime.now()
 
@@ -302,7 +302,7 @@ try:
 	elif subd == True and type_ip == True:
 		print(R + '[-]' + C + ' Sub-Domain Enumeration is Not Supported for IP Addresses' + W + '\n')
 		os.remove(pid_path)
-		sys.exit()
+		sys.exit(1)
 	else:
 		pass
 
@@ -326,7 +326,7 @@ try:
 		print ('\n' + R + '[-] Error : ' + C + 'At least One Argument is Required with URL' + W)
 		output = 'None'
 		os.remove(pid_path)
-		sys.exit()
+		sys.exit(1)
 
 	end_time = datetime.datetime.now() - start_time
 	print ('\n' + G + '[+]' + C + ' Completed in ' + W + str(end_time) + '\n')
@@ -344,4 +344,4 @@ try:
 except KeyboardInterrupt:
 	print (R + '[-]' + C + ' Keyboard Interrupt.' + W + '\n')
 	os.remove(pid_path)
-	sys.exit()
+	sys.exit(130)
