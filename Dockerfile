@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM alpine:3.15.4
 RUN apk update 
 RUN apk add \
 git \
