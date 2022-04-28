@@ -5,7 +5,7 @@ lxml
 dnslib
 aiohttp
 aiodns
-psycopg2
+psycopg2-binary
 tldextract
 icmplib
 python-nmap
