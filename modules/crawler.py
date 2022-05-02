@@ -42,7 +42,7 @@ def crawler(target, output, data):
 	print('\n' + Y + '[!]' + Y + ' Starting Crawler...' + W + '\n')
 
 	try:
-		rqst = requests.get(target, headers=user_agent, verify=false, timeout=10)
+		rqst = requests.get(target, headers=user_agent, verify=False, timeout=10)
 	except Exception as e:
 		print(R + '[-] Exception : ' + C + str(e) + W)
 		return
@@ -185,7 +185,7 @@ async def robots(target):
 	print(G + '[+]' + C + ' Looking for robots.txt' + W, end = '')
 
 	try:
-		r_rqst = requests.get(r_url, headers=user_agent, verify=True, timeout=10)
+		r_rqst = requests.get(r_url, headers=user_agent, verify=False, timeout=10)
 		r_sc = r_rqst.status_code
 		if r_sc == 200:
 			print(G + '['.rjust(9, '.') + ' Found ]' + W)
