@@ -233,7 +233,7 @@ async def sitemap():
 			links = sm_soup.find_all('loc')
 			for url in links:
 				url = url.get_text()
-				if url is not None:
+				if url != None:
 					sm_total.append(url)
 
 			sm_total = set(sm_total)
