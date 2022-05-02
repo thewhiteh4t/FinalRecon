@@ -39,22 +39,6 @@ else:
 with open(path_to_script + '/requirements.txt', 'r') as rqr:
 	pkg_list = rqr.read().strip().split('\n')
 
-print('\n' + G + '[+]' + C + ' Checking Dependencies...' + W + '\n')
-
-for pkg in pkg_list:
-	spec = importlib.util.find_spec(pkg)
-	if spec is None and pkg == "psycopg2-binary":
-		spec = importlib.util.find_spec("psycopg2")
-	if spec is None:
-		print(R + '[-]' + W + ' {}'.format(pkg) + C + ' is not Installed!' + W)
-		fail = True
-	else:
-		pass
-if fail == True:
-	print('\n' + R + '[-]' + C + ' Please Execute ' + W + 'pip3 install -r requirements.txt' + C + ' to Install Missing Packages' + W + '\n')
-	os.remove(pid_path)
-	sys.exit(1)
-
 import argparse
 
 version = '1.1.2'
