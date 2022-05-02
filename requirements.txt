@@ -8,4 +8,3 @@ aiodns
 psycopg2-binary
 tldextract
 icmplib
-python-nmap
