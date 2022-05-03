@@ -1,10 +1,7 @@
 {
-	"metadata":
-	{
-		"name": "FinalRecon",
-		"author": "thewhiteh4t",
-		"version": "1.1.2",
-		"twitter": "https://twitter.com/thewhiteh4t",
-		"discord": "https://discord.gg/UM92zUn"
-	}
+	"name": "FinalRecon",
+	"author": "thewhiteh4t",
+	"version": "1.1.3",
+	"twitter": "https://twitter.com/thewhiteh4t",
+	"comms": "https://twc1rcle.com/"
 }
