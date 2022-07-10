@@ -14,7 +14,7 @@
   <a href="https://thewhiteh4t.github.io"><b>thewhiteh4t's Blog</b></a>
 </p>
 
-FinalRecon is an **automatic web reconnaissance** tool written in python. Goal of FinalRecon is to provide an **overview** of the target in a **short** amount of time while maintaining the **accuracy** of results. Instead of executing **several tools** one after another it can provide similar results keeping dependencies **small and simple**.
+FinalRecon is an **automatic web reconnaissance** tool written in Python. Goal of FinalRecon is to provide an **overview** of the target in a **short** amount of time while maintaining the **accuracy** of results. Instead of executing **several tools** one after another it can provide similar results keeping dependencies **small and simple**.
 
 ## Available In
 
