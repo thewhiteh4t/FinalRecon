@@ -240,7 +240,7 @@ Extra Options:
 
 python3 finalrecon.py --headers <url>
 
-# Check ssl Certificate
+# Check SSL Certificate
 
 python3 finalrecon.py --sslinfo <url>
 
