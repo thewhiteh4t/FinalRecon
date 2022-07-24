@@ -86,28 +86,24 @@ FinalRecon provides detailed information such as :
       * Auth Token is Required for this source, read Configuration below
     * VirusTotal
     	* API Key is Required
+    * Shodan
+      * API Key is Required
     * CertSpotter
-
-* Traceroute
-  * Protocols
-    * UDP
-    * TCP
-    * ICMP
 
 * Directory Searching
   * Support for File Extensions
-  * Directories from Wayback Machine from Last 1 Year
+
+* Wayback Machine
+    * URLs from Last 5 Years
 
 * Port Scan
   * Fast
   * Top 1000 Ports
-  * Open Ports with Standard Services
 
 * Export
   * Formats
     * txt
-    * xml
-    * csv
+    * json [Coming Soon]
 
 ## Configuration
 
@@ -147,6 +143,20 @@ Example :
 ```
 {
 	"virustotal": "eu4zc5f0skv15fnw54nkhj4m26zbteh9409aklpxhfpp68s8d4l63pn13rsojt9y"
+}
+```
+
+#### Shodan API
+
+This data source is used to fetch **Sub Domains** which are used in **Sub Domain Enumeration**
+
+Key Format : `KEY`
+
+Example :
+
+```
+{
+	"shodan": "eu4zc5f0skv15fnw54nkhj"
 }
 ```
 
@@ -195,19 +205,17 @@ docker run -it --entrypoint /bin/sh thewhiteh4t/finalrecon
 ## Usage
 
 ```bash
-python3 finalrecon.py -h
-
 usage: finalrecon.py [-h] [--headers] [--sslinfo] [--whois] [--crawl] [--dns] [--sub]
-                     [--trace] [--dir] [--ps] [--full] [-t T] [-T T] [-w W] [-r] [-s]
-                     [-sp SP] [-d D] [-e E] [-m M] [-p P] [-tt TT] [-o O]
+                     [--dir] [--wayback] [--ps] [--full] [-t T] [-T T] [-w W] [-r] [-s]
+                     [-sp SP] [-d D] [-e E] [-o O]
                      url
 
-FinalRecon - The Last Web Recon Tool You Will Need | v1.1.0
+FinalRecon - The Last Web Recon Tool You Will Need | v1.1.4
 
 positional arguments:
   url         Target URL
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
   --headers   Header Information
   --sslinfo   SSL Certificate Information
@@ -215,8 +223,8 @@ optional arguments:
   --crawl     Crawl Target
   --dns       DNS Enumeration
   --sub       Sub-Domain Enumeration
-  --trace     Traceroute
   --dir       Directory Search
+  --wayback   Wayback URLs
   --ps        Fast Port Scan
   --full      Full Recon
 
@@ -229,10 +237,7 @@ Extra Options:
   -sp SP      Specify SSL Port [ Default : 443 ]
   -d D        Custom DNS Servers [ Default : 1.1.1.1 ]
   -e E        File Extensions [ Example : txt, xml, php ]
-  -m M        Traceroute Mode [ Default : UDP ] [ Available : TCP, ICMP ]
-  -p P        Port for Traceroute [ Default : 80 / 33434 ]
-  -tt TT      Traceroute Timeout [ Default : 1.0 ]
-  -o O        Export Output [ Default : txt ] [ Available : xml, csv ]
+  -o O        Export Output [ Default : txt ]
 ```
 
 ```bash
