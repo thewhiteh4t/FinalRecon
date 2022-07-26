@@ -141,7 +141,7 @@ def full_recon():
 		subdomains(domain, tout, output, data, conf_path)
 	else:
 		pass
-	ps(ip, output, data)
+	ps(ip, output, data, threads)
 	crawler(target, output, data)
 	hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext)
 	timetravel(target, data, output)
@@ -230,7 +230,7 @@ try:
 
 	if pscan is True:
 		from modules.portscan import ps
-		ps(ip, output, data)
+		ps(ip, output, data, threads)
 
 	if dirrec is True:
 		from modules.dirrec import hammer
