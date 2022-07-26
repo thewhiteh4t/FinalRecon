@@ -48,7 +48,7 @@ def ps(ip, output, data, threads):
 	result = {}
 	result['ports'] = []
 	print(f'\n{Y}[!] Starting Port Scan...{W}\n')
-	print(f'{G}[+] {C}Scanning Top 1000 Ports with {threads} threads...{W}\n')
+	print(f'{G}[+] {C}Scanning Top 1000 Ports With {threads} Threads...{W}\n')
 
 	loop = asyncio.new_event_loop()
 	asyncio.set_event_loop(loop)
