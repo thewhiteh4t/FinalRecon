@@ -197,10 +197,24 @@ pip3 install -r requirements.txt
 
 ### Docker
 
-```
+``` bash
 docker pull thewhiteh4t/finalrecon
 docker run -it --entrypoint /bin/sh thewhiteh4t/finalrecon
 ```
+
+Also docker user can use this alias to run the finalrecon as the normal CLI user.
+
+``` bash
+alias finalrecon="docker run -it --rm --name finalrecon  --entrypoint 'python3' thewhiteh4t/finalrecon finalrecon.py"
+```
+
+And then use `finalrecon` to start your scan.
+
+> remark
+>
+> If you have any api keys you can easily commit that image in your local machine.
+>
+> This docker usage needs root to run docker command.
 
 ## Usage
 
