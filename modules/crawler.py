@@ -20,10 +20,7 @@ Y = '\033[33m'  # yellow
 
 user_agent = {'User-Agent': 'FinalRecon'}
 
-# url = ''
 soup = ''
-r_url = ''
-sm_url = ''
 total = []
 r_total = []
 sm_total = []
@@ -62,14 +59,15 @@ def crawler(target, output, data):
 		else:
 			ext = tldextract.extract(target)
 			hostname = '.'.join(part for part in ext if part)
-			r_url = f'{protocol}://{hostname}/robots.txt'
-			sm_url = f'{protocol}://{hostname}/sitemap.xml'
+			base_url = f'{protocol}://{hostname}'
+			r_url = f'{base_url}/robots.txt'
+			sm_url = f'{base_url}/sitemap.xml'
 
 		loop = asyncio.new_event_loop()
 		asyncio.set_event_loop(loop)
 		tasks = asyncio.gather(
-			robots(target, data, output),
-			sitemap(data, output),
+			robots(r_url, base_url, data, output),
+			sitemap(sm_url, data, output),
 			css(target, data, output),
 			js(target, data, output),
 			internal_links(target, data, output),
@@ -119,14 +117,14 @@ def url_filter(target, link):
 		return ret_url
 	else:
 		pass
+	return link
 
-
-async def robots(target, data, output):
+async def robots(robo_url, base_url, data, output):
 	global r_total
 	print(f'{G}[+] {C}Looking for robots.txt{W}', end='', flush=True)
 
 	try:
-		r_rqst = requests.get(r_url, headers=user_agent, verify=False, timeout=10)
+		r_rqst = requests.get(robo_url, headers=user_agent, verify=False, timeout=10)
 		r_sc = r_rqst.status_code
 		if r_sc == 200:
 			print(G + '['.rjust(9, '.') + ' Found ]' + W)
@@ -143,9 +141,9 @@ async def robots(target, data, output):
 					try:
 						url = url[1]
 						url = url.strip()
-						tmp_url = url_filter(target, url)
+						tmp_url = url_filter(base_url, url)
 						if tmp_url is not None:
-							r_total.append(url_filter(target, url))
+							r_total.append(url_filter(base_url, url))
 						if url.endswith('xml') is True:
 							sm_total.append(url)
 					except Exception:
@@ -162,8 +160,8 @@ async def robots(target, data, output):
 		print(f'\n{R}[-] Exception : {C}{e}{W}')
 
 
-async def sitemap(data, output):
-	global sm_url, total, sm_total
+async def sitemap(sm_url, data, output):
+	global sm_total
 	print(f'{G}[+] {C}Looking for sitemap.xml{W}', end='', flush=True)
 	try:
 		sm_rqst = requests.get(sm_url, headers=user_agent, verify=False, timeout=10)
@@ -185,13 +183,13 @@ async def sitemap(data, output):
 		elif sm_sc == 404:
 			print(R + '['.rjust(8, '.') + ' Not Found ]' + W)
 		else:
-			print(R + '['.rjust(8, '.') + ' {} ]'.format(sm_sc) + W)
+			print(f'{R}{"[".rjust(8, ".")} Status Code : {sm_sc} ]{W}')
 	except Exception as e:
 		print(f'\n{R}[-] Exception : {C}{e}{W}')
 
 
 async def css(target, data, output):
-	global soup, total, css_total
+	global css_total
 	print(f'{G}[+] {C}Extracting CSS Links{W}', end='', flush=True)
 	css = soup.find_all('link', href=True)
 

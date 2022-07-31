@@ -21,6 +21,7 @@ def timetravel(target, data, output):
 	curr_yr = date.today().year
 	last_yr = curr_yr - 5
 
+	print(f'\n{Y}[!] Starting WayBack Machine...{W}\n')
 	print(f'{Y}[!] {C}Checking Availability on Wayback Machine{W}', end='', flush=True)
 	wm_avail = 'http://archive.org/wayback/available'
 	avail_data = {'url': target}
@@ -43,7 +44,7 @@ def timetravel(target, data, output):
 		print(f'\n{R}[-] Exception : {C}{e}{W}')
 
 	if is_avail is True:
-		print(f'{Y}[!] {C}Requesting Wayback Machine{W}', end='', flush=True)
+		print(f'{Y}[!] {C}Fetching URLs{W}', end='', flush=True)
 		wm_url = 'http://web.archive.org/cdx/search/cdx'
 
 		payload = {

@@ -8,23 +8,18 @@ G = '\033[32m'  # green
 C = '\033[36m'  # cyan
 W = '\033[0m'   # white
 
-home = os.getenv('HOME')
-usr_data = home + '/.local/share/finalrecon/dumps/'
-conf_path = home + '/.config/finalrecon'
-path_to_script = os.path.dirname(os.path.realpath(__file__))
-src_conf_path = path_to_script + '/conf/'
-meta_file_path = path_to_script + '/metadata.json'
-fail = False
+import settings as config
 
-if os.path.exists(conf_path):
-	pass
-else:
-	import shutil
-	shutil.copytree(src_conf_path, conf_path, dirs_exist_ok=True)
+home = config.home
+usr_data = config.usr_data
+conf_path = config.conf_path
+path_to_script = config.path_to_script
+src_conf_path = config.src_conf_path
+meta_file_path = config.meta_file_path
 
 import argparse
 
-version = '1.1.4'
+version = '1.1.5'
 gh_version = ''
 twitter_url = ''
 discord_url = ''
@@ -43,7 +38,8 @@ parser.add_argument('--ps', help='Fast Port Scan', action='store_true')
 parser.add_argument('--full', help='Full Recon', action='store_true')
 
 ext_help = parser.add_argument_group('Extra Options')
-ext_help.add_argument('-t', type=int, help='Number of Threads [ Default : 30 ]')
+ext_help.add_argument('-dt', type=int, help='Number of threads for directory enum [ Default : 30 ]')
+ext_help.add_argument('-pt', type=int, help='Number of threads for port scan [ Default : 50 ]')
 ext_help.add_argument('-T', type=float, help='Request Timeout [ Default : 30.0 ]')
 ext_help.add_argument('-w', help='Path to Wordlist [ Default : wordlists/dirb_common.txt ]')
 ext_help.add_argument('-r', action='store_true', help='Allow Redirect [ Default : False ]')
@@ -51,17 +47,19 @@ ext_help.add_argument('-s', action='store_false', help='Toggle SSL Verification 
 ext_help.add_argument('-sp', type=int, help='Specify SSL Port [ Default : 443 ]')
 ext_help.add_argument('-d', help='Custom DNS Servers [ Default : 1.1.1.1 ]')
 ext_help.add_argument('-e', help='File Extensions [ Example : txt, xml, php ]')
-ext_help.add_argument('-o', help='Export Output [ Default : txt ]')
+ext_help.add_argument('-o', help='Export Format [ Default : txt ]')
 ext_help.set_defaults(
-	t=30,
-	T=30.0,
-	w=path_to_script + '/wordlists/dirb_common.txt',
-	r=False,
-	s=True,
-	sp=443,
-	d='1.1.1.1',
-	e='',
-	o='txt')
+	dt=config.dir_enum_th,
+	pt=config.port_scan_th,
+	T=config.timeout,
+	w=config.dir_enum_wlist,
+	r=config.dir_enum_redirect,
+	s=config.dir_enum_sslv,
+	sp=config.ssl_port,
+	d=config.dir_enum_dns,
+	e=config.dir_enum_ext,
+	o=config.export_fmt
+)
 
 try:
 	args = parser.parse_args()
@@ -78,7 +76,8 @@ dirrec = args.dir
 wback = args.wayback
 pscan = args.ps
 full = args.full
-threads = args.t
+threads = args.dt
+pscan_threads = args.pt
 tout = args.T
 wdlist = args.w
 redir = args.r
@@ -141,10 +140,11 @@ def full_recon():
 		subdomains(domain, tout, output, data, conf_path)
 	else:
 		pass
-	ps(ip, output, data, threads)
+	ps(ip, output, data, pscan_threads)
 	crawler(target, output, data)
 	hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext)
 	timetravel(target, data, output)
+
 
 try:
 	banner()

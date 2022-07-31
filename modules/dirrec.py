@@ -63,8 +63,7 @@ async def consumer(queue, target, session, redir, total_num_words):
 		url = values[0]
 		redir = values[1]
 		status = await fetch(url, session, redir)
-		if status == 200:
-			await filter_out(target, url, status)
+		await filter_out(target, url, status)
 		queue.task_done()
 		count += 1
 		print(f'{Y}[!] {C}Requests : {W}{count}/{total_num_words}', end='\r')
@@ -73,7 +72,7 @@ async def consumer(queue, target, session, redir, total_num_words):
 async def run(target, threads, tout, wdlist, redir, sslv, dserv, filext, total_num_words):
 	queue = asyncio.Queue(maxsize=threads)
 
-	resolver = aiohttp.AsyncResolver(nameservers=[dserv])
+	resolver = aiohttp.AsyncResolver(nameservers=dserv.split(', '))
 	conn = aiohttp.TCPConnector(limit=threads, resolver=resolver, family=socket.AF_INET, verify_ssl=sslv)
 	timeout = aiohttp.ClientTimeout(total=None, sock_connect=tout, sock_read=tout)
 	async with aiohttp.ClientSession(connector=conn, timeout=timeout) as session:
