@@ -3,6 +3,7 @@
 import aiohttp
 import asyncio
 from modules.export import export
+from modules.subdomain_modules.bevigil_subs import bevigil
 from modules.subdomain_modules.thcrowd_subs import thcrowd
 from modules.subdomain_modules.anubis_subs import anubisdb
 from modules.subdomain_modules.thminer_subs import thminer
@@ -28,6 +29,7 @@ async def query(hostname, tout, conf_path):
 	timeout = aiohttp.ClientTimeout(total=tout)
 	async with aiohttp.ClientSession(timeout=timeout) as session:
 		await asyncio.gather(
+			bevigil(hostname, conf_path, session),
 			thcrowd(hostname, session),
 			anubisdb(hostname, session),
 			thminer(hostname, session),
