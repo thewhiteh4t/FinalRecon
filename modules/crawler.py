@@ -56,6 +56,7 @@ def crawler(target, output, data):
 		if custom is True:
 			r_url = f'{protocol}://{temp_tgt}/robots.txt'
 			sm_url = f'{protocol}://{temp_tgt}/sitemap.xml'
+			base_url = f'{protocol}://{temp_tgt}'
 		else:
 			ext = tldextract.extract(target)
 			hostname = '.'.join(part for part in ext if part)
