@@ -112,9 +112,9 @@ FinalRecon provides detailed information such as :
 Some Modules Use API Keys to fetch data from different resources, these are optional, if you are not using an API key, they will be simply skipped.
 If you are interested in using these resources you can store your API key in **keys.json** file.
 
-`Path --> $HOME/.config/finalrecon/conf/keys.json`
+`Path --> $HOME/.config/finalrecon/keys.json`
 
-If you dont want to use a key for a certain data source just set its value to `null`, by default values of all available data sources are null.
+If you don't want to use a key for a certain data source just set its value to `null`, by default values of all available data sources are null.
 
 #### Facebook Developers API
 
@@ -159,6 +159,21 @@ Example :
 	"shodan": "eu4zc5f0skv15fnw54nkhj"
 }
 ```
+
+#### BeVigil API
+
+This data source is used to fetch **Sub Domains** which are used in **Sub Domain Enumeration**
+
+Key Format : `KEY`
+
+Example :
+
+```
+{
+	"bevigil": "bteh9409aklpxhfpp68s8d"
+}
+```
+
 
 ## Tested on
 
