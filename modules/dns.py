@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import dnslib
 from modules.export import export
 
@@ -17,11 +18,15 @@ def dnsrec(domain, output, data):
 	full_ans = []
 	for dns_record in dns_records:
 		q = dnslib.DNSRecord.question(domain, dns_record)
-		pkt = q.send('8.8.8.8', 53, tcp='UDP')
-		ans = dnslib.DNSRecord.parse(pkt)
-		ans = str(ans)
-		ans = ans.split('\n')
-		full_ans.extend(ans)
+		try:
+			pkt = q.send('8.8.8.8', 53, tcp='UDP')
+			ans = dnslib.DNSRecord.parse(pkt)
+			ans = str(ans)
+			ans = ans.split('\n')
+			full_ans.extend(ans)
+		except ConnectionRefusedError as e:
+			print(f'\n{R}[-] {C}Exception : {W}{e}\nServer is probably not listening!')
+			sys.exit(1)
 	full_ans = set(full_ans)
 	dns_found = []
 
