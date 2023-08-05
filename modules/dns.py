@@ -53,7 +53,7 @@ def dnsrec(domain, output, data):
 	dmarc_found = []
 
 	for entry in dmarc_ans:
-		if entry.startswith('_dmarc') is True:
+		if entry.startswith('_dmarc'):
 			dmarc_found.append(entry)
 
 	if not dmarc_found:
