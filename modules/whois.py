@@ -33,15 +33,11 @@ def whois_lookup(ip_addr, output, data):
 									print(f'{G}[+] {C}{key}: {W}{temp_val}')
 									if output != 'None':
 										result.update({str(key): str(temp_val)})
-							else:
-								pass
 				else:
 					temp_val = val.replace(',', ' ').replace('\r', ' ').replace('\n', ' ')
 					print(f'{G}[+] {C}{key}: {W}{temp_val}')
 					if output != 'None':
 						result.update({str(key): str(temp_val)})
-			else:
-				pass
 	except Exception as e:
 		print(f'{R}[-] Error : {C}{e}{W}')
 		if output != 'None':

@@ -12,9 +12,7 @@ meta_file_path = f'{path_to_script}/metadata.json'
 keys_file_path = f'{conf_path}/keys.json'
 conf_file_path = f'{conf_path}/config.json'
 
-if path.exists(conf_path):
-	pass
-else:
+if not path.exists(conf_path):
 	from shutil import copytree
 	copytree(src_conf_path, conf_path, dirs_exist_ok=True)
 

@@ -136,10 +136,9 @@ def full_recon():
 	cert(hostname, sslp, output, data)
 	whois_lookup(ip, output, data)
 	dnsrec(domain, output, data)
-	if type_ip is False:
+	if not type_ip:
 		subdomains(domain, tout, output, data, conf_path)
-	else:
-		pass
+
 	ps(ip, output, data, pscan_threads)
 	crawler(target, output, data)
 	hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext)
@@ -149,16 +148,12 @@ def full_recon():
 try:
 	banner()
 
-	if target.startswith(('http', 'https')) is False:
+	if not target.startswith(('http', 'https')):
 		print(f'{R}[-] {C}Protocol Missing, Include {W}http:// {C}or{W} https:// \n')
 		sys.exit(1)
-	else:
-		pass
 
-	if target.endswith('/') is True:
+	if target.endswith('/'):
 		target = target[:-1]
-	else:
-		pass
 
 	print(f'{G}[+] {C}Target : {W}{target}')
 	ext = tldextract.extract(target)
@@ -192,51 +187,49 @@ try:
 			'file': fname
 		}
 
-	if full is True:
+	if full:
 		full_recon()
 
-	if headinfo is True:
+	if headinfo:
 		from modules.headers import headers
 		headers(target, output, data)
 
-	if sslinfo is True:
+	if sslinfo:
 		from modules.sslinfo import cert
 		cert(hostname, sslp, output, data)
 
-	if whois is True:
+	if whois:
 		from modules.whois import whois_lookup
 		whois_lookup(ip, output, data)
 
-	if crawl is True:
+	if crawl:
 		from modules.crawler import crawler
 		crawler(target, output, data)
 
-	if dns is True:
+	if dns:
 		from modules.dns import dnsrec
 		dnsrec(domain, output, data)
 
-	if subd is True and type_ip is False:
+	if subd and not type_ip:
 		from modules.subdom import subdomains
 		subdomains(domain, tout, output, data, conf_path)
-	elif subd is True and type_ip is True:
+	elif subd and type_ip:
 		print(f'{R}[-] {C}Sub-Domain Enumeration is Not Supported for IP Addresses{W}\n')
 		sys.exit(1)
-	else:
-		pass
 
-	if wback is True:
+	if wback:
 		from modules.wayback import timetravel
 		timetravel(hostname, data, output)
 
-	if pscan is True:
+	if pscan:
 		from modules.portscan import ps
 		ps(ip, output, data, threads)
 
-	if dirrec is True:
+	if dirrec:
 		from modules.dirrec import hammer
 		hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext)
 
-	if any([full, headinfo, sslinfo, whois, crawl, dns, subd, wback, pscan, dirrec]) is not True:
+	if not any([full, headinfo, sslinfo, whois, crawl, dns, subd, wback, pscan, dirrec]):
 		print(f'\n{R}[-] Error : {C}At least One Argument is Required with URL{W}')
 		output = 'None'
 		sys.exit(1)
