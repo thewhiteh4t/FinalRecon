@@ -4,6 +4,7 @@ import os
 import ssl
 import socket
 from modules.export import export
+from modules.write_log import log_writer
 
 R = '\033[31m'  # red
 G = '\033[32m'  # green
@@ -17,32 +18,31 @@ def cert(hostname, sslp, output, data):
 	pair = {}
 	print(f'\n{Y}[!] SSL Certificate Information : {W}\n')
 
-	pt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	pt.settimeout(5)
+	port_test = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	port_test.settimeout(5)
 	try:
-		pt.connect((hostname, sslp))
-		pt.close()
+		port_test.connect((hostname, sslp))
+		port_test.close()
 
 		ctx = ssl.create_default_context()
 		sock = socket.socket()
 		sock.settimeout(5)
-		s = ctx.wrap_socket(sock, server_hostname=hostname)
+		ssl_conn = ctx.wrap_socket(sock, server_hostname=hostname)
 
 		try:
-			s.connect((hostname, sslp))
-			info = s.getpeercert()
+			ssl_conn.connect((hostname, sslp))
+			info = ssl_conn.getpeercert()
 		except Exception:
 			info = ssl.get_server_certificate((hostname, sslp))
-			f = open(f'{hostname}.pem', 'w')
-			f.write(info)
-			f.close()
+			with open(f'{hostname}.pem', 'w') as outfile:
+				outfile.write(info)
 			cert_dict = ssl._ssl._test_decode_cert(f'{hostname}.pem')
 			info = cert_dict
 			os.remove(f'{hostname}.pem')
 
-		def unpack(v, pair):
+		def unpack(val, pair):
 			convert = False
-			for item in v:
+			for item in val:
 				if isinstance(item, tuple):
 					for subitem in item:
 						if isinstance(subitem, tuple):
@@ -56,31 +56,33 @@ def cert(hostname, sslp, output, data):
 						else:
 							pass
 				else:
-					print(f'{G}[+] {C}{k}: {W}{item}')
+					print(f'{G}[+] {C}{key}: {W}{item}')
 					if output != 'None':
-						result.update({k: v})
+						result.update({key: val})
 
-		for k, v in info.items():
-			if isinstance(v, tuple):
-				unpack(v, pair)
-				for k, v in pair.items():
-					print(f'{G}[+] {C}{k}: {W}{v}')
+		for key, val in info.items():
+			if isinstance(val, tuple):
+				unpack(val, pair)
+				for key, val in pair.items():
+					print(f'{G}[+] {C}{key}: {W}{val}')
 					if output != 'None':
-						result.update({k: v})
+						result.update({key: val})
 				pair.clear()
 			else:
-				print(f'{G}[+] {C}{k}: {W}{v}')
+				print(f'{G}[+] {C}{key}: {W}{val}')
 			if output != 'None':
-				result.update({k: v})
+				result.update({key: val})
 
 	except Exception:
-		pt.close()
+		port_test.close()
 		print(f'{R}[-] {C}SSL is not Present on Target URL...Skipping...{W}')
 		if output != 'None':
 			result.update({'Error': 'SSL is not Present on Target URL'})
+		log_writer('[sslinfo] SSL is not Present on Target URL...Skipping...')
 	result.update({'exported': False})
 	if output != 'None':
 		fname = f'{output["directory"]}/ssl.{output["format"]}'
 		output['file'] = fname
 		data['module-SSL Certificate Information'] = result
 		export(output, data)
+	log_writer('[sslinfo] Completed')

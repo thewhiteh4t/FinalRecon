@@ -2,6 +2,7 @@
 
 import dnslib
 from modules.export import export
+from modules.write_log import log_writer
 
 R = '\033[31m'  # red
 G = '\033[32m'  # green
@@ -15,9 +16,9 @@ def dnsrec(domain, output, data):
 	print(f'\n{Y}[!] Starting DNS Enumeration...{W}\n')
 	types = ['A', 'AAAA', 'ANY', 'CAA', 'CNAME', 'MX', 'NS', 'TXT']
 	full_ans = []
-	for Type in types:
-		q = dnslib.DNSRecord.question(domain, Type)
-		pkt = q.send('8.8.8.8', 53, tcp='UDP')
+	for rec_type in types:
+		query = dnslib.DNSRecord.question(domain, rec_type)
+		pkt = query.send('8.8.8.8', 53, tcp='UDP')
 		ans = dnslib.DNSRecord.parse(pkt)
 		ans = str(ans)
 		ans = ans.split('\n')
@@ -42,8 +43,8 @@ def dnsrec(domain, output, data):
 			result.setdefault('dns', ['DNS Records Not Found'])
 
 	dmarc_target = f'_dmarc.{domain}'
-	q = dnslib.DNSRecord.question(dmarc_target, 'TXT')
-	pkt = q.send('8.8.8.8', 53, tcp='UDP')
+	query = dnslib.DNSRecord.question(dmarc_target, 'TXT')
+	pkt = query.send('8.8.8.8', 53, tcp='UDP')
 	dmarc_ans = dnslib.DNSRecord.parse(pkt)
 	dmarc_ans = str(dmarc_ans)
 	dmarc_ans = dmarc_ans.split('\n')
@@ -70,3 +71,4 @@ def dnsrec(domain, output, data):
 		fname = f'{output["directory"]}/dns_records.{output["format"]}'
 		output['file'] = fname
 		export(output, data)
+	log_writer('[dns] Completed')

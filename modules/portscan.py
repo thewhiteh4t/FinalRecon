@@ -2,6 +2,7 @@
 
 import asyncio
 from modules.export import export
+from modules.write_log import log_writer
 
 R = '\033[31m'  # red
 G = '\033[32m'  # green
@@ -18,24 +19,22 @@ async def insert(queue):
 		await queue.put(port)
 
 
-async def consumer(queue, ip, result):
+async def consumer(queue, ip_addr, result):
 	global counter
 	while True:
 		port = await queue.get()
-		await sock_conn(ip, port, result)
+		await sock_conn(ip_addr, port, result)
 		queue.task_done()
 		counter += 1
 		print(f'{Y}[!] {C}Scanning : {W}{counter}/{len(port_list)}', end='\r')
 
 
-async def run(ip, result, threads):
+async def run(ip_addr, result, threads):
 	queue = asyncio.Queue(maxsize=threads)
-	
-
 	distrib = asyncio.create_task(insert(queue))
 	workers = [
 		asyncio.create_task(
-			consumer(queue, ip, result)
+			consumer(queue, ip_addr, result)
 		) for _ in range(threads)]
 
 	await asyncio.gather(distrib)
@@ -44,7 +43,7 @@ async def run(ip, result, threads):
 		worker.cancel()
 
 
-def ps(ip, output, data, threads):
+def scan(ip_addr, output, data, threads):
 	result = {}
 	result['ports'] = []
 	print(f'\n{Y}[!] Starting Port Scan...{W}\n')
@@ -52,16 +51,17 @@ def ps(ip, output, data, threads):
 
 	loop = asyncio.new_event_loop()
 	asyncio.set_event_loop(loop)
-	loop.run_until_complete(run(ip, result, threads))
+	loop.run_until_complete(run(ip_addr, result, threads))
 	loop.close()
 
 	if output != 'None':
 		ps_output(output, data, result)
+	log_writer('[portscan] Completed')
 
 
-async def sock_conn(ip, port, result):
+async def sock_conn(ip_addr, port, result):
 	try:
-		connector = asyncio.open_connection(ip, port)
+		connector = asyncio.open_connection(ip_addr, port)
 		await asyncio.wait_for(connector, 1)
 		print(f'\x1b[K{G}[+] {C}{port}{W}')
 		result['ports'].append(str(port))

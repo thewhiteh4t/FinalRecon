@@ -8,6 +8,7 @@ Y = '\033[33m'  # yellow
 
 from json import loads
 import modules.subdom as parent
+from modules.write_log import log_writer
 
 
 async def fb_cert(hostname, conf_path, session):
@@ -27,8 +28,8 @@ async def fb_cert(hostname, conf_path, session):
 		}
 		try:
 			async with session.get(url, params=fb_params) as resp:
-				sc = resp.status
-				if sc == 200:
+				status = resp.status
+				if status == 200:
 					json_data = await resp.text()
 					json_read = loads(json_data)
 					domains = json_read['data']
@@ -36,8 +37,12 @@ async def fb_cert(hostname, conf_path, session):
 					for i in range(0, len(domains)):
 						parent.found.extend(json_read['data'][i]['domains'])
 				else:
-					print(f'{R}[-] {C}Facebook Status : {W}{sc}')
-		except Exception as e:
-			print(f'{R}[-] {C}Facebook Exception : {W}{e}')
+					print(f'{R}[-] {C}Facebook Status : {W}{status}')
+					log_writer(f'[fb_subs] Status = {status}, expected 200')
+		except Exception as exc:
+			print(f'{R}[-] {C}Facebook Exception : {W}{exc}')
+			log_writer(f'[fb_subs] Exception = {exc}')
 	else:
 		print(f'{Y}[!] Skipping Facebook : {W}API key not found!')
+		log_writer('[fb_subs] API key not found')
+	log_writer('[fb_subs] Completed')

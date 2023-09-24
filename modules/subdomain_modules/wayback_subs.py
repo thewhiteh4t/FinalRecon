@@ -7,6 +7,7 @@ W = '\033[0m'   # white
 Y = '\033[33m'  # yellow
 
 import modules.subdom as parent
+from modules.write_log import log_writer
 
 
 async def machine(hostname, session):
@@ -14,8 +15,8 @@ async def machine(hostname, session):
     url = f'http://web.archive.org/cdx/search/cdx?url=*.{hostname}/*&output=txt&fl=original&collapse=urlkey'
     try:
         async with session.get(url) as resp:
-            sc = resp.status
-            if sc == 200:
+            status = resp.status
+            if status == 200:
                 raw_data = await resp.text()
                 lines = raw_data.split('\n')
                 tmp_list = []
@@ -26,6 +27,9 @@ async def machine(hostname, session):
                 print(f'{G}[+] {Y}Wayback {W}found {C}{len(tmp_list)} {W}subdomains!')
                 parent.found.extend(tmp_list)
             else:
-                print(f'{R}[-] {C}Wayback Status : {W}{sc}')
-    except Exception as e:
-        print(f'{R}[-] {C}Wayback Exception : {W}{e}')
+                print(f'{R}[-] {C}Wayback Status : {W}{status}')
+                log_writer(f'[wayback_subs] Status = {status}, expected 200')
+    except Exception as exc:
+        print(f'{R}[-] {C}Wayback Exception : {W}{exc}')
+        log_writer(f'[wayback_subs] Exception = {exc}')
+    log_writer('[wayback_subs] Completed')

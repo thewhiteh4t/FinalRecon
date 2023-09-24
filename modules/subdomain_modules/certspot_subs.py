@@ -8,6 +8,7 @@ Y = '\033[33m'  # yellow
 
 from json import loads
 import modules.subdom as parent
+from modules.write_log import log_writer
 
 
 async def certspot(hostname, session):
@@ -21,8 +22,8 @@ async def certspot(hostname, session):
 
 	try:
 		async with session.get(url, params=cs_params) as resp:
-			sc = resp.status
-			if sc == 200:
+			status = resp.status
+			if status == 200:
 				json_data = await resp.text()
 				json_read = loads(json_data)
 				print(f'{G}[+] {Y}Certsport {W}found {C}{len(json_read)} {W}subdomains!')
@@ -30,6 +31,9 @@ async def certspot(hostname, session):
 					domains = json_read[i]['dns_names']
 					parent.found.extend(domains)
 			else:
-				print(f'{R}[-] {C}CertSpotter Status : {W}{sc}')
-	except Exception as e:
-		print(f'{R}[-] {C}CertSpotter Exception : {W}{e}')
+				print(f'{R}[-] {C}CertSpotter Status : {W}{status}')
+				log_writer(f'[certspot_subs] Status = {status}, expected 200')
+	except Exception as exc:
+		print(f'{R}[-] {C}CertSpotter Exception : {W}{exc}')
+		log_writer(f'[certspot_subs] Exception = {exc}')
+	log_writer('[certspot_subs] Completed')

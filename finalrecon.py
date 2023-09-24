@@ -8,6 +8,8 @@ G = '\033[32m'  # green
 C = '\033[36m'  # cyan
 W = '\033[0m'   # white
 
+from modules.write_log import log_writer
+log_writer('Importing config...')
 import settings as config
 
 home = config.home
@@ -17,14 +19,18 @@ path_to_script = config.path_to_script
 src_conf_path = config.src_conf_path
 meta_file_path = config.meta_file_path
 
+log_writer(
+	f'PATHS = HOME:{home}, SCRIPT_LOC:{path_to_script},\
+	METADATA:{meta_file_path}, KEYS:{config.keys_file_path},\
+	CONFIG:{config.conf_file_path}, LOG:{config.log_file_path}'
+)
+
 import argparse
 
-version = '1.1.5'
-gh_version = ''
-twitter_url = ''
-discord_url = ''
+VERSION = '1.1.5'
+log_writer(f'FinalRecon v{VERSION}')
 
-parser = argparse.ArgumentParser(description=f'FinalRecon - The Last Web Recon Tool You Will Need | v{version}')
+parser = argparse.ArgumentParser(description=f'FinalRecon - The Last Web Recon Tool You Will Need | v{VERSION}')
 parser.add_argument('url', help='Target URL')
 parser.add_argument('--headers', help='Header Information', action='store_true')
 parser.add_argument('--sslinfo', help='SSL Certificate Information', action='store_true')
@@ -64,6 +70,8 @@ ext_help.set_defaults(
 try:
 	args = parser.parse_args()
 except SystemExit:
+	log_writer('[finalrecon] Help menu accessed')
+	log_writer(f'{"-" * 30}')
 	sys.exit()
 
 target = args.url
@@ -119,7 +127,7 @@ def banner():
 	print(f'{G}[>]{C} Created By   :{W} thewhiteh4t')
 	print(f'{G} |--->{C} Twitter   :{W} {twitter_url}')
 	print(f'{G} |--->{C} Community :{W} {comms_url}')
-	print(f'{G}[>]{C} Version      :{W} {version}\n')
+	print(f'{G}[>]{C} Version      :{W} {VERSION}\n')
 
 
 def full_recon():
@@ -129,7 +137,7 @@ def full_recon():
 	from modules.dns import dnsrec
 	from modules.whois import whois_lookup
 	from modules.dirrec import hammer
-	from modules.portscan import ps
+	from modules.portscan import scan
 	from modules.subdom import subdomains
 	from modules.wayback import timetravel
 	headers(target, output, data)
@@ -140,7 +148,7 @@ def full_recon():
 		subdomains(domain, tout, output, data, conf_path)
 	else:
 		pass
-	ps(ip, output, data, pscan_threads)
+	scan(ip, output, data, pscan_threads)
 	crawler(target, output, data)
 	hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext)
 	timetravel(target, data, output)
@@ -151,6 +159,7 @@ try:
 
 	if target.startswith(('http', 'https')) is False:
 		print(f'{R}[-] {C}Protocol Missing, Include {W}http:// {C}or{W} https:// \n')
+		log_writer(f'Protocol missing in {target}, exiting')
 		sys.exit(1)
 	else:
 		pass
@@ -186,65 +195,83 @@ try:
 		respath = f'{fpath}fr_{hostname}_{dt_now}'
 		if not os.path.exists(respath):
 			os.makedirs(respath)
-		output = {
+		out_settings = {
 			'format': output,
 			'directory': respath,
 			'file': fname
 		}
+		log_writer(f'OUTPUT = FORMAT: {output}, DIR: {respath}, FILENAME: {fname}')
 
 	if full is True:
+		log_writer('Starting full recon...')
 		full_recon()
 
 	if headinfo is True:
 		from modules.headers import headers
-		headers(target, output, data)
+		log_writer('Starting header enum...')
+		headers(target, out_settings, data)
 
 	if sslinfo is True:
 		from modules.sslinfo import cert
-		cert(hostname, sslp, output, data)
+		log_writer('Starting SSL enum...')
+		cert(hostname, sslp, out_settings, data)
 
 	if whois is True:
 		from modules.whois import whois_lookup
-		whois_lookup(ip, output, data)
+		log_writer('Starting whois enum...')
+		whois_lookup(ip, out_settings, data)
 
 	if crawl is True:
 		from modules.crawler import crawler
-		crawler(target, output, data)
+		log_writer('Starting crawler...')
+		crawler(target, out_settings, data)
 
 	if dns is True:
 		from modules.dns import dnsrec
-		dnsrec(domain, output, data)
+		log_writer('Starting DNS enum...')
+		dnsrec(domain, out_settings, data)
 
 	if subd is True and type_ip is False:
 		from modules.subdom import subdomains
-		subdomains(domain, tout, output, data, conf_path)
+		log_writer('Starting subdomain enum...')
+		subdomains(domain, tout, out_settings, data, conf_path)
 	elif subd is True and type_ip is True:
 		print(f'{R}[-] {C}Sub-Domain Enumeration is Not Supported for IP Addresses{W}\n')
+		log_writer('Sub-Domain Enumeration is Not Supported for IP Addresses, exiting')
 		sys.exit(1)
 	else:
 		pass
 
 	if wback is True:
 		from modules.wayback import timetravel
-		timetravel(hostname, data, output)
+		log_writer('Starting wayback enum...')
+		timetravel(hostname, data, out_settings)
 
 	if pscan is True:
-		from modules.portscan import ps
-		ps(ip, output, data, threads)
+		from modules.portscan import scan
+		log_writer('Starting port scan...')
+		scan(ip, out_settings, data, threads)
 
 	if dirrec is True:
 		from modules.dirrec import hammer
-		hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext)
+		log_writer('Starting dir enum...')
+		hammer(target, threads, tout, wdlist, redir, sslv, dserv, out_settings, data, filext)
 
 	if any([full, headinfo, sslinfo, whois, crawl, dns, subd, wback, pscan, dirrec]) is not True:
 		print(f'\n{R}[-] Error : {C}At least One Argument is Required with URL{W}')
+		log_writer('At least One Argument is Required with URL, exiting')
 		output = 'None'
 		sys.exit(1)
 
 	end_time = datetime.datetime.now() - start_time
 	print(f'\n{G}[+] {C}Completed in {W}{str(end_time)}\n')
+	log_writer(f'Completed in {end_time}')
 	print(f'{G}[+] {C}Exported : {W}{respath}')
+	log_writer(f'Exported to {respath}')
+	log_writer(f'{"-" * 30}')
 	sys.exit()
 except KeyboardInterrupt:
 	print(f'{R}[-] {C}Keyboard Interrupt.{W}\n')
+	log_writer('Keyboard interrupt, exiting')
+	log_writer(f'{"-" * 30}')
 	sys.exit(130)

@@ -10,6 +10,7 @@ import json
 import requests
 from datetime import date
 from modules.export import export
+from modules.write_log import log_writer
 
 
 def timetravel(target, data, output):
@@ -40,8 +41,10 @@ def timetravel(target, data, output):
 				print(R + '['.rjust(5, '.') + ' N/A ]')
 		else:
 			print(f'\n{R}[-] Status : {C}{check_sc}{W}')
-	except Exception as e:
-		print(f'\n{R}[-] Exception : {C}{e}{W}')
+			log_writer(f'[wayback] Status = {check_sc}, expected 200')
+	except Exception as exc:
+		print(f'\n{R}[-] Exception : {C}{exc}{W}')
+		log_writer(f'[wayback] Exception = {exc}')
 
 	if is_avail is True:
 		print(f'{Y}[!] {C}Fetching URLs{W}', end='', flush=True)
@@ -56,14 +59,14 @@ def timetravel(target, data, output):
 		}
 
 		try:
-			r = requests.get(wm_url, params=payload)
-			r_sc = r.status_code
+			rqst = requests.get(wm_url, params=payload, timeout=10)
+			r_sc = rqst.status_code
 			if r_sc == 200:
-				r_data = r.text
+				r_data = rqst.text
 				if len(r_data) != 0:
 					r_data = r_data.split('\n')
 					r_data = set(r_data)
-					print(G + '['.rjust(5, '.') + ' {} ]'.format(str(len(r_data))))
+					print(f'{G}{"[".rjust(5, ".")} {len(r_data)} ]{W}')
 					wayback_total.extend(r_data)
 
 					if output != 'None':
@@ -74,8 +77,10 @@ def timetravel(target, data, output):
 						output['file'] = fname
 						export(output, data)
 				else:
-					print(R + '['.rjust(5, '.') + ' Not Found ]' + W)
+					print(f'{R}{"[".rjust(5, ".")} Not Found ]{W}')
 			else:
-				print(R + '['.rjust(5, '.') + ' {} ]'.format(r_sc) + W)
-		except Exception as e:
-			print(f'\n{R}[-] Exception : {C}{e}{W}')
+				print(f'{R}{"[".rjust(5, ".")} {r_sc} ]{W}')
+		except Exception as exc:
+			print(f'\n{R}[-] Exception : {C}{exc}{W}')
+			log_writer(f'[wayback] Exception = {exc}')
+	log_writer('[wayback] Completed')

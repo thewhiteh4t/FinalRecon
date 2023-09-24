@@ -2,9 +2,10 @@
 
 import aiohttp
 import asyncio
+from re import match
 from modules.export import export
+from modules.write_log import log_writer
 from modules.subdomain_modules.bevigil_subs import bevigil
-from modules.subdomain_modules.thcrowd_subs import thcrowd
 from modules.subdomain_modules.anubis_subs import anubisdb
 from modules.subdomain_modules.thminer_subs import thminer
 from modules.subdomain_modules.fb_subs import fb_cert
@@ -30,7 +31,6 @@ async def query(hostname, tout, conf_path):
 	async with aiohttp.ClientSession(timeout=timeout) as session:
 		await asyncio.gather(
 			bevigil(hostname, conf_path, session),
-			thcrowd(hostname, session),
 			anubisdb(hostname, session),
 			thminer(hostname, session),
 			fb_cert(hostname, conf_path, session),
@@ -58,15 +58,19 @@ def subdomains(hostname, tout, output, data, conf_path):
 
 	found = [item for item in found if item.endswith(hostname)]
 	valid = r"^[A-Za-z0-9._~()'!*:@,;+?-]*$"
-	from re import match
 	found = [item for item in found if match(valid, item)]
 	found = set(found)
 	total = len(found)
 
 	if len(found) != 0:
 		print(f'\n{G}[+] {C}Results : {W}\n')
+		i = 0
 		for url in found:
 			print(url)
+			i += 1
+			if i == 20:
+				print(f'\n{G}[+]{C} Results truncated...{W}')
+				break
 
 	print(f'\n{G}[+] {C}Total Unique Sub Domains Found : {W}{total}')
 
@@ -77,3 +81,4 @@ def subdomains(hostname, tout, output, data, conf_path):
 		fname = f'{output["directory"]}/subdomains.{output["format"]}'
 		output['file'] = fname
 		export(output, data)
+	log_writer('[subdom] Completed')

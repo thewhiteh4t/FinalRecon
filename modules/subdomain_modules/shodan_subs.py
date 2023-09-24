@@ -8,6 +8,7 @@ Y = '\033[33m'  # yellow
 
 from json import loads
 import modules.subdom as parent
+from modules.write_log import log_writer
 
 
 async def shodan(hostname, conf_path, session):
@@ -23,8 +24,8 @@ async def shodan(hostname, conf_path, session):
 
 		try:
 			async with session.get(url) as resp:
-				sc = resp.status
-				if sc == 200:
+				status = resp.status
+				if status == 200:
 					json_data = await resp.text()
 					json_read = loads(json_data)
 					domains = json_read['subdomains']
@@ -34,8 +35,12 @@ async def shodan(hostname, conf_path, session):
 					print(f'{G}[+] {Y}Shodan {W}found {C}{len(tmp_list)} {W}subdomains!')
 					parent.found.extend(tmp_list)
 				else:
-					print(f'{R}[-] {C}Shodan Status : {W}{sc}')
-		except Exception as e:
-			print(f'{R}[-] {C}Shodan Exception : {W}{e}')
+					print(f'{R}[-] {C}Shodan Status : {W}{status}')
+					log_writer(f'[shodan_subs] Status = {status}, expected 200')
+		except Exception as exc:
+			print(f'{R}[-] {C}Shodan Exception : {W}{exc}')
+			log_writer(f'[shodan_subs] Exception = {exc}')
 	else:
 		print(f'{Y}[!] Skipping Shodan : {W}API key not found!')
+		log_writer('[shodan_subs] API key not found')
+	log_writer('[shodan_subs] Completed')
