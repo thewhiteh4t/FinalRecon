@@ -38,7 +38,6 @@ async def query(hostname, tout, conf_path):
 			shodan(hostname, conf_path, session),
 			certspot(hostname, session),
 			machine(hostname, session),
-			sonar(hostname, session),
 			hackertgt(hostname, session),
 			crtsh(hostname)
 		)
