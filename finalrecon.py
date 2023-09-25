@@ -187,16 +187,16 @@ try:
 		from modules.wayback import timetravel
 		from modules.whois import whois_lookup
 
-		headers(target, output, data)
-		cert(hostname, sslp, output, data)
-		whois_lookup(ip, output, data)
-		dnsrec(domain, output, data)
+		headers(target, out_settings, data)
+		cert(hostname, sslp, out_settings, data)
+		whois_lookup(ip, out_settings, data)
+		dnsrec(domain, out_settings, data)
 		if not type_ip:
-			subdomains(domain, tout, output, data, conf_path)
-		scan(ip, output, data, pscan_threads)
-		crawler(target, output, data)
-		hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext)
-		timetravel(target, data, output)
+			subdomains(domain, tout, out_settings, data, conf_path)
+		scan(ip, out_settings, data, pscan_threads)
+		crawler(target, out_settings, data)
+		hammer(target, threads, tout, wdlist, redir, sslv, dserv, out_settings, data, filext)
+		timetravel(target, data, out_settings)
 
 	if headinfo:
 		from modules.headers import headers
