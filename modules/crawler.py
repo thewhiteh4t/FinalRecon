@@ -3,13 +3,12 @@
 import re
 import bs4
 import lxml
-import json
 import asyncio
 import requests
 import threading
 import tldextract
-from datetime import date
 from modules.export import export
+from modules.write_log import log_writer
 requests.packages.urllib3.disable_warnings()
 
 R = '\033[31m'  # red
@@ -20,7 +19,6 @@ Y = '\033[33m'  # yellow
 
 user_agent = {'User-Agent': 'FinalRecon'}
 
-soup = ''
 total = []
 r_total = []
 sm_total = []
@@ -34,17 +32,18 @@ sm_crawl_total = []
 
 
 def crawler(target, output, data):
-	global soup, r_url, sm_url
+	global r_url, sm_url
 	print(f'\n{Y}[!] Starting Crawler...{W}\n')
 
 	try:
 		rqst = requests.get(target, headers=user_agent, verify=False, timeout=10)
-	except Exception as e:
-		print(f'{R} [-] Exception : {C}{e}{W}')
+	except Exception as exc:
+		print(f'{R} [-] Exception : {C}{exc}{W}')
+		log_writer(f'[crawler] Exception = {exc}')
 		return
 
-	sc = rqst.status_code
-	if sc == 200:
+	status = rqst.status_code
+	if status == 200:
 		page = rqst.content
 		soup = bs4.BeautifulSoup(page, 'lxml')
 
@@ -69,18 +68,20 @@ def crawler(target, output, data):
 		tasks = asyncio.gather(
 			robots(r_url, base_url, data, output),
 			sitemap(sm_url, data, output),
-			css(target, data, output),
-			js(target, data, output),
-			internal_links(target, data, output),
-			external_links(target, data, output),
-			images(target, data, output),
+			css(target, data, soup, output),
+			js_scan(target, data, soup, output),
+			internal_links(target, data, soup, output),
+			external_links(target, data, soup, output),
+			images(target, data, soup, output),
 			sm_crawl(data, output),
 			js_crawl(data, output))
 		loop.run_until_complete(tasks)
 		loop.close()
-		stats(output, data)
+		stats(output, data, soup)
+		log_writer('[crawler] Completed')
 	else:
-		print(f'{R}[-] {C}Status : {W}{sc}')
+		print(f'{R}[-] {C}Status : {W}{status}')
+		log_writer(f'[crawler] Status code = {status}, expected 200')
 
 
 def url_filter(target, link):
@@ -112,6 +113,7 @@ def url_filter(target, link):
 		return ret_url
 	return link
 
+
 async def robots(robo_url, base_url, data, output):
 	global r_total
 	print(f'{G}[+] {C}Looking for robots.txt{W}', end='', flush=True)
@@ -120,7 +122,7 @@ async def robots(robo_url, base_url, data, output):
 		r_rqst = requests.get(robo_url, headers=user_agent, verify=False, timeout=10)
 		r_sc = r_rqst.status_code
 		if r_sc == 200:
-			print(G + '['.rjust(9, '.') + ' Found ]' + W)
+			print(f'{G}{"[".rjust(9, ".")} Found ]{W}')
 			print(f'{G}[+] {C}Extracting robots Links{W}', end='', flush=True)
 			r_page = r_rqst.text
 			r_scrape = r_page.split('\n')
@@ -139,25 +141,26 @@ async def robots(robo_url, base_url, data, output):
 							r_total.append(url_filter(base_url, url))
 						if url.endswith('xml'):
 							sm_total.append(url)
-					except Exception:
-						pass
+					except Exception as exc:
+						log_writer(f'[crawler.robots] Exception = {exc}')
 
 			r_total = set(r_total)
-			print(G + '['.rjust(8, '.') + ' {} ]'.format(str(len(r_total))))
+			print(f'{G}{"[".rjust(8, ".")} {len(r_total)} ]')
 			exporter(data, output, r_total, 'robots')
 		elif r_sc == 404:
-			print(R + '['.rjust(9, '.') + ' Not Found ]' + W)
+			print(f'{R}{"[".rjust(9, ".")} Not Found ]{W}')
 		else:
-			print(R + '['.rjust(9, '.') + ' {} ]'.format(r_sc) + W)
-	except Exception as e:
-		print(f'\n{R}[-] Exception : {C}{e}{W}')
+			print(f'{R}{"[".rjust(9, ".")} {r_sc} ]{W}')
+	except Exception as exc:
+		print(f'\n{R}[-] Exception : {C}{exc}{W}')
+		log_writer(f'[crawler.robots] Exception = {exc}')
 
 
-async def sitemap(sm_url, data, output):
+async def sitemap(target_url, data, output):
 	global sm_total
 	print(f'{G}[+] {C}Looking for sitemap.xml{W}', end='', flush=True)
 	try:
-		sm_rqst = requests.get(sm_url, headers=user_agent, verify=False, timeout=10)
+		sm_rqst = requests.get(target_url, headers=user_agent, verify=False, timeout=10)
 		sm_sc = sm_rqst.status_code
 		if sm_sc == 200:
 			print(G + '['.rjust(8, '.') + ' Found ]' + W)
@@ -171,33 +174,34 @@ async def sitemap(sm_url, data, output):
 					sm_total.append(url)
 
 			sm_total = set(sm_total)
-			print(G + '['.rjust(7, '.') + ' {} ]'.format(str(len(sm_total))))
+			print(f'{G}{"[".rjust(7, ".")} {len(sm_total)} ]{W}')
 			exporter(data, output, sm_total, 'sitemap')
 		elif sm_sc == 404:
-			print(R + '['.rjust(8, '.') + ' Not Found ]' + W)
+			print(f'{R}{"[".rjust(8, ".")} Not Found ]{W}')
 		else:
 			print(f'{R}{"[".rjust(8, ".")} Status Code : {sm_sc} ]{W}')
-	except Exception as e:
-		print(f'\n{R}[-] Exception : {C}{e}{W}')
+	except Exception as exc:
+		print(f'\n{R}[-] Exception : {C}{exc}{W}')
+		log_writer(f'[crawler.sitemap] Exception = {exc}')
 
 
-async def css(target, data, output):
+async def css(target, data, soup, output):
 	global css_total
 	print(f'{G}[+] {C}Extracting CSS Links{W}', end='', flush=True)
-	css = soup.find_all('link', href=True)
+	css_links = soup.find_all('link', href=True)
 
-	for link in css:
+	for link in css_links:
 		url = link.get('href')
 		if url is not None and '.css' in url:
 			css_total.append(url_filter(target, url))
 
 	css_total = set(css_total)
-	print(G + '['.rjust(11, '.') + ' {} ]'.format(str(len(css_total))) + W)
+	print(f'{G}{"[".rjust(11, ".")} {len(css_total)} ]{W}')
 	exporter(data, output, css_total, 'css')
 
 
-async def js(target, data, output):
-	global total, js_total
+async def js_scan(target, data, soup, output):
+	global js_total
 	print(f'{G}[+] {C}Extracting Javascript Links{W}', end='', flush=True)
 	scr_tags = soup.find_all('script', src=True)
 
@@ -209,12 +213,12 @@ async def js(target, data, output):
 				js_total.append(tmp_url)
 
 	js_total = set(js_total)
-	print(G + '['.rjust(4, '.') + ' {} ]'.format(str(len(js_total))))
+	print(f'{G}{"[".rjust(4, ".")} {len(js_total)} ]{W}')
 	exporter(data, output, js_total, 'javascripts')
 
 
-async def internal_links(target, data, output):
-	global total, int_total
+async def internal_links(target, data, soup, output):
+	global int_total
 	print(f'{G}[+] {C}Extracting Internal Links{W}', end='', flush=True)
 
 	ext = tldextract.extract(target)
@@ -228,12 +232,12 @@ async def internal_links(target, data, output):
 				int_total.append(url)
 
 	int_total = set(int_total)
-	print(G + '['.rjust(6, '.') + ' {} ]'.format(str(len(int_total))))
+	print(f'{G}{"[".rjust(6, ".")} {len(int_total)} ]{W}')
 	exporter(data, output, int_total, 'internal_urls')
 
 
-async def external_links(target, data, output):
-	global total, ext_total
+async def external_links(target, data, soup, output):
+	global ext_total
 	print(f'{G}[+] {C}Extracting External Links{W}', end='', flush=True)
 
 	ext = tldextract.extract(target)
@@ -247,12 +251,12 @@ async def external_links(target, data, output):
 				ext_total.append(url)
 
 	ext_total = set(ext_total)
-	print(G + '['.rjust(6, '.') + ' {} ]'.format(str(len(ext_total))))
+	print(f'{G}{"[".rjust(6, ".")} {len(ext_total)} ]{W}')
 	exporter(data, output, ext_total, 'external_urls')
 
 
-async def images(target, data, output):
-	global total, img_total
+async def images(target, data, soup, output):
+	global img_total
 	print(f'{G}[+] {C}Extracting Images{W}', end='', flush=True)
 	image_tags = soup.find_all('img')
 
@@ -262,7 +266,7 @@ async def images(target, data, output):
 			img_total.append(url_filter(target, url))
 
 	img_total = set(img_total)
-	print(G + '['.rjust(14, '.') + ' {} ]'.format(str(len(img_total))))
+	print(f'{G}{"[".rjust(14, ".")} {len(img_total)} ]{W}')
 	exporter(data, output, img_total, 'images')
 
 
@@ -290,23 +294,23 @@ async def sm_crawl(data, output):
 			else:
 				# print(R + '['.rjust(8, '.') + ' {} ]'.format(sm_sc) + W)
 				pass
-		except Exception:
-			# print(f'\n{R}[-] Exception : {C}{e}{W}')
-			pass
+		except Exception as exc:
+			# print(f'\n{R}[-] Exception : {C}{exc}{W}')
+			log_writer(f'[crawler.sm_crawl] Exception = {exc}')
 
 	for site_url in sm_total:
 		if site_url != sm_url:
 			if site_url.endswith('xml') is True:
-				t = threading.Thread(target=fetch, args=[site_url])
-				t.daemon = True
-				threads.append(t)
-				t.start()
+				task = threading.Thread(target=fetch, args=[site_url])
+				task.daemon = True
+				threads.append(task)
+				task.start()
 
 	for thread in threads:
 		thread.join()
 
 	sm_crawl_total = set(sm_crawl_total)
-	print(G + '['.rjust(14, '.') + ' {} ]'.format(str(len(sm_crawl_total))))
+	print(f'{G}{"[".rjust(14, ".")} {len(sm_crawl_total)} ]{W}')
 	exporter(data, output, sm_crawl_total, 'urls_inside_sitemap')
 
 
@@ -329,32 +333,33 @@ async def js_crawl(data, output):
 						for item in found:
 							if len(item) > 8:
 								js_crawl_total.append(item)
-		except Exception as e:
-			print(f'\n{R}[-] Exception : {C}{e}{W}')
+		except Exception as exc:
+			# print(f'\n{R}[-] Exception : {C}{exc}{W}')
+			log_writer(f'[crawler.js_crawl] Exception = {exc}')
 
 	for js_url in js_total:
-		t = threading.Thread(target=fetch, args=[js_url])
-		t.daemon = True
-		threads.append(t)
-		t.start()
+		task = threading.Thread(target=fetch, args=[js_url])
+		task.daemon = True
+		threads.append(task)
+		task.start()
 
 	for thread in threads:
 		thread.join()
 
 	js_crawl_total = set(js_crawl_total)
-	print(G + '['.rjust(11, '.') + ' {} ]'.format(str(len(js_crawl_total))))
+	print(f'{G}{"[".rjust(11, ".")} {len(js_crawl_total)} ]{W}')
 	exporter(data, output, js_crawl_total, 'urls_inside_js')
 
 
 def exporter(data, output, list_name, file_name):
-	data[f'module-crawler-{file_name}'] = ({'links': list(list_name)})
+	data[f'module-crawler-{file_name}'] = {'links': list(list_name)}
 	data[f'module-crawler-{file_name}'].update({'exported': False})
 	fname = f'{output["directory"]}/{file_name}.{output["format"]}'
 	output['file'] = fname
 	export(output, data)
 
 
-def stats(output, data):
+def stats(output, data, soup):
 	global total
 
 	total.extend(r_total)

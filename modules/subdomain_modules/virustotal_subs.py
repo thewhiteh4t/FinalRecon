@@ -8,6 +8,7 @@ Y = '\033[33m'  # yellow
 
 from json import loads
 import modules.subdom as parent
+from modules.write_log import log_writer
 
 
 async def virust(hostname, conf_path, session):
@@ -25,8 +26,8 @@ async def virust(hostname, conf_path, session):
 		}
 		try:
 			async with session.get(url, headers=vt_headers) as resp:
-				sc = resp.status
-				if sc == 200:
+				status = resp.status
+				if status == 200:
 					json_data = await resp.text()
 					json_read = loads(json_data)
 					domains = json_read['data']
@@ -36,8 +37,12 @@ async def virust(hostname, conf_path, session):
 					print(f'{G}[+] {Y}VirusTotal {W}found {C}{len(tmp_list)} {W}subdomains!')
 					parent.found.extend(tmp_list)
 				else:
-					print(f'{R}[-] {C}VirusTotal Status : {W}{sc}')
-		except Exception as e:
-			print(f'{R}[-] {C}VirusTotal Exception : {W}{e}')
+					print(f'{R}[-] {C}VirusTotal Status : {W}{status}')
+					log_writer(f'[virustotal_subs] Status = {status}')
+		except Exception as exc:
+			print(f'{R}[-] {C}VirusTotal Exception : {W}{exc}')
+			log_writer(f'[virustotal_subs] Exception = {exc}')
 	else:
 		print(f'{Y}[!] Skipping VirusTotal : {W}API key not found!')
+		log_writer('[virustotal_subs] API key not found')
+	log_writer('[virustotal_subs] Completed')

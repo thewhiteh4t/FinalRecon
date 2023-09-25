@@ -8,6 +8,7 @@ Y = '\033[33m'  # yellow
 
 from json import loads
 import modules.subdom as parent
+from modules.write_log import log_writer
 
 
 async def anubisdb(hostname, session):
@@ -15,13 +16,15 @@ async def anubisdb(hostname, session):
 	url = f'https://jldc.me/anubis/subdomains/{hostname}'
 	try:
 		async with session.get(url) as resp:
-			sc = resp.status
-			if sc == 200:
+			status = resp.status
+			if status == 200:
 				output = await resp.text()
 				json_out = loads(output)
 				parent.found.extend(json_out)
 				print(f'{G}[+] {Y}AnubisDB {W}found {C}{len(json_out)} {W}subdomains!')
 			else:
-				print(f'{R}[-] {C}AnubisDB Status : {W}{sc}')
-	except Exception as e:
-		print(f'{R}[-] {C}AnubisDB Exception : {W}{e}')
+				print(f'{R}[-] {C}AnubisDB Status : {W}{status}')
+				log_writer(f'[anubis_subs] Status = {status}, expected 200')
+	except Exception as exc:
+		print(f'{R}[-] {C}AnubisDB Exception : {W}{exc}')
+	log_writer('[anubis_subs] Completed')

@@ -7,6 +7,7 @@ W = '\033[0m'   # white
 Y = '\033[33m'  # yellow
 
 import modules.subdom as parent
+from modules.write_log import log_writer
 
 
 async def hackertgt(hostname, session):
@@ -14,8 +15,8 @@ async def hackertgt(hostname, session):
 	url = f'https://api.hackertarget.com/hostsearch/?q={hostname}'
 	try:
 		async with session.get(url) as resp:
-			sc = resp.status
-			if sc == 200:
+			status = resp.status
+			if status == 200:
 				data = await resp.text()
 				data_list = data.split('\n')
 				tmp_list = []
@@ -25,6 +26,9 @@ async def hackertgt(hostname, session):
 				print(f'{G}[+] {Y}HackerTarget {W}found {C}{len(tmp_list)} {W}subdomains!')
 				parent.found.extend(tmp_list)
 			else:
-				print(f'{R}[-] {C}HackerTarget Status : {W}{sc}')
-	except Exception as e:
-		print(f'{R}[-] {C}HackerTarget Exception : {W}{e}')
+				print(f'{R}[-] {C}HackerTarget Status : {W}{status}')
+				log_writer(f'[htarget_subs] Status = {status}, expected 200')
+	except Exception as exc:
+		print(f'{R}[-] {C}HackerTarget Exception : {W}{exc}')
+		log_writer(f'[htarget_subs] Exception = {exc}')
+	log_writer('[htarget_subs] Completed')

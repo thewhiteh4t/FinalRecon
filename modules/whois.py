@@ -2,6 +2,7 @@
 
 import ipwhois
 from modules.export import export
+from modules.write_log import log_writer
 
 R = '\033[31m'  # red
 G = '\033[32m'  # green
@@ -38,11 +39,12 @@ def whois_lookup(ip_addr, output, data):
 					print(f'{G}[+] {C}{key}: {W}{temp_val}')
 					if output != 'None':
 						result.update({str(key): str(temp_val)})
-	except Exception as e:
-		print(f'{R}[-] Error : {C}{e}{W}')
-		if output != 'None':
-			result.update({'Error': str(e)})
+	except Exception as exc:
+		print(f'{R}[-] Error : {C}{exc}{W}')
 
+		if output != 'None':
+			result.update({'Error': str(exc)})
+		log_writer(f'[whois] Exception = {exc}')
 	result.update({'exported': False})
 
 	if output != 'None':
@@ -50,3 +52,4 @@ def whois_lookup(ip_addr, output, data):
 		output['file'] = fname
 		data['module-whois'] = result
 		export(output, data)
+	log_writer('[whois] Completed')

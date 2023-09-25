@@ -2,6 +2,7 @@
 
 import requests
 from modules.export import export
+from modules.write_log import log_writer
 requests.packages.urllib3.disable_warnings()
 
 R = '\033[31m'  # red
@@ -20,10 +21,11 @@ def headers(target, output, data):
 			print(f'{C}{key} : {W}{val}')
 			if output != 'None':
 				result.update({key: val})
-	except Exception as e:
-		print(f'\n{R}[-] {C}Exception : {W}{e}\n')
+	except Exception as exc:
+		print(f'\n{R}[-] {C}Exception : {W}{exc}\n')
 		if output != 'None':
-			result.update({'Exception': str(e)})
+			result.update({'Exception': str(exc)})
+		log_writer(f'[headers] Exception = {exc}')
 	result.update({'exported': False})
 
 	if output != 'None':
@@ -31,3 +33,4 @@ def headers(target, output, data):
 		output['file'] = fname
 		data['module-headers'] = result
 		export(output, data)
+	log_writer('[headers] Completed')

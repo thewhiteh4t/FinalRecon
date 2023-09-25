@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-
 import socket
 import aiohttp
 import asyncio
 from datetime import date
 from modules.export import export
+from modules.write_log import log_writer
 
 R = '\033[31m'  # red
 G = '\033[32m'  # green
@@ -28,8 +28,9 @@ async def fetch(url, session, redir):
 		async with session.get(url, headers=header, allow_redirects=redir) as response:
 			responses.append((url, response.status))
 			return response.status
-	except Exception as e:
-		print(f'{R}[-] {C}Exception : {W}' + str(e).strip('\n'))
+	except Exception as exc:
+		print(f'{R}[-] {C}Exception : {W}' + str(exc).strip('\n'))
+		log_writer(f'[dirrec] Exception : {exc}')
 
 
 async def insert(queue, filext, target, wdlist, redir):
@@ -104,7 +105,6 @@ async def filter_out(target, url, status):
 
 
 def dir_output(output, data):
-	global responses, found
 	result = {}
 
 	for entry in responses:
@@ -151,3 +151,4 @@ def hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, file
 	loop.run_until_complete(run(target, threads, tout, wdlist, redir, sslv, dserv, filext, total_num_words))
 	dir_output(output, data)
 	loop.close()
+	log_writer('[dirrec] Completed')

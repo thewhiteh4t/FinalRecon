@@ -8,6 +8,7 @@ Y = '\033[33m'  # yellow
 
 from json import loads
 import modules.subdom as parent
+from modules.write_log import log_writer
 
 
 async def thcrowd(hostname, session):
@@ -18,8 +19,8 @@ async def thcrowd(hostname, session):
 	}
 	try:
 		async with session.get(url, params=thc_params) as resp:
-			sc = resp.status
-			if sc == 200:
+			status = resp.status
+			if status == 200:
 				output = await resp.text()
 				json_out = loads(output)
 				if json_out['response_code'] == '0':
@@ -29,6 +30,9 @@ async def thcrowd(hostname, session):
 					print(f'{G}[+] {Y}ThreatCrowd {W}found {C}{len(subd)} {W}subdomains!')
 					parent.found.extend(subd)
 			else:
-				print(f'{R}[-] {C}ThreatCrowd Status : {W}{sc}')
-	except Exception as e:
-		print(f'{R}[-] {C}ThreatCrowd Exception : {W}{e}')
+				print(f'{R}[-] {C}ThreatCrowd Status : {W}{status}')
+				log_writer(f'[thcrowd] Status = {status}, expected 200')
+	except Exception as exc:
+		print(f'{R}[-] {C}ThreatCrowd Exception : {W}{exc}')
+		log_writer(f'[thcrowd] Exception = {exc}')
+	log_writer('[thcrowd] Completed')

@@ -2,8 +2,8 @@
 
 <p align="center">
 <img src="https://img.shields.io/badge/Python-3-brightgreen.svg?style=plastic">
-<img src="https://img.shields.io/badge/OSINT-red.svg?style=plastic">
-<img src="https://img.shields.io/badge/Web-red.svg?style=plastic">
+<img src="https://img.shields.io/badge/All In One-red.svg?style=plastic">
+<img src="https://img.shields.io/badge/Web Recon-red.svg?style=plastic">
 </p>
 
 <p align="center">
@@ -14,25 +14,19 @@
   <a href="https://thewhiteh4t.github.io"><b>thewhiteh4t's Blog</b></a>
 </p>
 
-FinalRecon is an **automatic web reconnaissance** tool written in python. Goal of FinalRecon is to provide an **overview** of the target in a **short** amount of time while maintaining the **accuracy** of results. Instead of executing **several tools** one after another it can provide similar results keeping dependencies **small and simple**.
+FinalRecon is an all in one **automatic web reconnaissance** tool written in python. Goal of FinalRecon is to provide an **overview** of the target in a **short** amount of time while maintaining the **accuracy** of results. Instead of executing **several tools** one after another it can provide similar results keeping dependencies **small and simple**.
 
 ## Available In
 
 <p align="center">
   <a href="https://www.kali.org/news/kali-linux-2020-4-release/">
-    <img width="150px" hspace="10px" src="https://i.imgur.com/yQRrCtC.png" alt="kali linux finalrecon">
+    <img width="150px" hspace="10px" src="https://i.imgur.com/teSiL4p.png" alt="kali linux finalrecon">
   </a>
   <a href="https://blackarch.org/">
     <img width="150px" hspace="10px" src="https://i.imgur.com/YZ5KDL1.png" alt="blackarch finalrecon">
   </a>
   <a href="https://secbsd.org/">
     <img width="150px" hspace="10px" src="https://i.imgur.com/z36xL8c.png" alt="secbsd finalrecon">
-  </a>
-  <a href="https://tsurugi-linux.org/">
-    <img width="150px" hspace="10px" src="https://i.imgur.com/S1ylcp7.jpg" alt="tsurugi linux finalrecon">
-  </a>
-  <a href="https://www.tracelabs.org/initiatives/osint-vm">
-    <img width="150px" hspace="10px" src="https://i.imgur.com/COAbvYr.png" alt="tracelabs finalrecon">
   </a>
 </p>
 
@@ -234,12 +228,13 @@ And then use `finalrecon` to start your scan.
 ## Usage
 
 ```bash
-usage: finalrecon.py [-h] [--headers] [--sslinfo] [--whois] [--crawl] [--dns] [--sub]
-                     [--dir] [--wayback] [--ps] [--full] [-t T] [-T T] [-w W] [-r] [-s]
-                     [-sp SP] [-d D] [-e E] [-o O]
+usage: finalrecon.py [-h] [--headers] [--sslinfo] [--whois] [--crawl]
+                     [--dns] [--sub] [--dir] [--wayback] [--ps]
+                     [--full] [-dt DT] [-pt PT] [-T T] [-w W] [-r]
+                     [-s] [-sp SP] [-d D] [-e E] [-o O]
                      url
 
-FinalRecon - The Last Web Recon Tool You Will Need | v1.1.4
+FinalRecon - The Last Web Recon Tool You Will Need | v1.1.5
 
 positional arguments:
   url         Target URL
@@ -258,15 +253,17 @@ options:
   --full      Full Recon
 
 Extra Options:
-  -t T        Number of Threads [ Default : 30 ]
+  -dt DT      Number of threads for directory enum [ Default : 30 ]
+  -pt PT      Number of threads for port scan [ Default : 50 ]
   -T T        Request Timeout [ Default : 30.0 ]
-  -w W        Path to Wordlist [ Default : wordlists/dirb_common.txt ]
+  -w W        Path to Wordlist [ Default : wordlists/dirb_common.txt
+              ]
   -r          Allow Redirect [ Default : False ]
   -s          Toggle SSL Verification [ Default : True ]
   -sp SP      Specify SSL Port [ Default : 443 ]
   -d D        Custom DNS Servers [ Default : 1.1.1.1 ]
   -e E        File Extensions [ Example : txt, xml, php ]
-  -o O        Export Output [ Default : txt ]
+  -o O        Export Format [ Default : txt ]
 ```
 
 ```bash

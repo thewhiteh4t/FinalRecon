@@ -8,6 +8,7 @@ Y = '\033[33m'  # yellow
 
 import psycopg2
 import modules.subdom as parent
+from modules.write_log import log_writer
 
 
 async def crtsh(hostname):
@@ -31,5 +32,7 @@ async def crtsh(hostname):
 			tmp_list.append(url[0])
 		print(f'{G}[+] {Y}CRT.sh {W}found {C}{len(tmp_list)} {W}subdomains!')
 		parent.found.extend(tmp_list)
-	except Exception as e:
-		print(f'{R}[-] {C}crtsh Exception : {W}{e}')
+	except Exception as exc:
+		print(f'{R}[-] {C}crtsh Exception : {W}{exc}')
+		log_writer(f'[crtsh_subs] Exception = {exc}')
+	log_writer('[crtsh_subs] Completed')

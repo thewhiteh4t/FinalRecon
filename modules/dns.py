@@ -3,6 +3,7 @@
 import sys
 import dnslib
 from modules.export import export
+from modules.write_log import log_writer
 
 R = '\033[31m'  # red
 G = '\033[32m'  # green
@@ -16,17 +17,20 @@ def dnsrec(domain, output, data):
 	print(f'\n{Y}[!] Starting DNS Enumeration...{W}\n')
 	dns_records = ['A', 'AAAA', 'ANY', 'CAA', 'CNAME', 'MX', 'NS', 'TXT']
 	full_ans = []
+
 	for dns_record in dns_records:
-		q = dnslib.DNSRecord.question(domain, dns_record)
+		query = dnslib.DNSRecord.question(domain, dns_record)
 		try:
-			pkt = q.send('8.8.8.8', 53, tcp='UDP')
+			pkt = query.send('8.8.8.8', 53, tcp='UDP')
 			ans = dnslib.DNSRecord.parse(pkt)
 			ans = str(ans)
 			ans = ans.split('\n')
 			full_ans.extend(ans)
-		except ConnectionRefusedError as e:
-			print(f'\n{R}[-] {C}Exception : {W}{e}\nServer is probably not listening!')
-			sys.exit(1)
+		except ConnectionRefusedError as exc:
+			print(f'\n{R}[-] {C}Exception : {W}{exc}\nServer is probably not listening!')
+      log_writer(f'[dns] Exception = {exc}')
+			return
+
 	full_ans = set(full_ans)
 	dns_found = []
 
@@ -45,8 +49,8 @@ def dnsrec(domain, output, data):
 				result.setdefault('dns', []).append(entry)
 
 	dmarc_target = f'_dmarc.{domain}'
-	q = dnslib.DNSRecord.question(dmarc_target, 'TXT')
-	pkt = q.send('8.8.8.8', 53, tcp='UDP')
+	query = dnslib.DNSRecord.question(dmarc_target, 'TXT')
+	pkt = query.send('8.8.8.8', 53, tcp='UDP')
 	dmarc_ans = dnslib.DNSRecord.parse(pkt)
 	dmarc_ans = str(dmarc_ans)
 	dmarc_ans = dmarc_ans.split('\n')
@@ -72,3 +76,4 @@ def dnsrec(domain, output, data):
 		fname = f'{output["directory"]}/dns_records.{output["format"]}'
 		output['file'] = fname
 		export(output, data)
+	log_writer('[dns] Completed')
