@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
 import dnslib
 from modules.export import export
 from modules.write_log import log_writer
@@ -28,7 +27,7 @@ def dnsrec(domain, output, data):
 			full_ans.extend(ans)
 		except ConnectionRefusedError as exc:
 			print(f'\n{R}[-] {C}Exception : {W}{exc}\nServer is probably not listening!')
-      log_writer(f'[dns] Exception = {exc}')
+			log_writer(f'[dns] Exception = {exc}')
 			return
 
 	full_ans = set(full_ans)

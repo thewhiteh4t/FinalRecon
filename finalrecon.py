@@ -197,7 +197,7 @@ try:
 		log_writer(f'OUTPUT = FORMAT: {output}, DIR: {respath}, FILENAME: {fname}')
 
 	if full:
-    log_writer('Starting full recon...')
+		log_writer('Starting full recon...')
 		full_recon()
 
 	if headinfo:
@@ -229,8 +229,8 @@ try:
 		from modules.subdom import subdomains
 		log_writer('Starting subdomain enum...')
 		subdomains(domain, tout, out_settings, data, conf_path)
-	
-  elif subd and type_ip:
+
+	elif subd and type_ip:
 		print(f'{R}[-] {C}Sub-Domain Enumeration is Not Supported for IP Addresses{W}\n')
 		log_writer('Sub-Domain Enumeration is Not Supported for IP Addresses, exiting')
 		sys.exit(1)
