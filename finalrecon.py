@@ -130,28 +130,6 @@ def banner():
 	print(f'{G}[>]{C} Version      :{W} {VERSION}\n')
 
 
-def full_recon():
-	from modules.sslinfo import cert
-	from modules.crawler import crawler
-	from modules.headers import headers
-	from modules.dns import dnsrec
-	from modules.whois import whois_lookup
-	from modules.dirrec import hammer
-	from modules.portscan import scan
-	from modules.subdom import subdomains
-	from modules.wayback import timetravel
-	headers(target, output, data)
-	cert(hostname, sslp, output, data)
-	whois_lookup(ip, output, data)
-	dnsrec(domain, output, data)
-	if not type_ip:
-		subdomains(domain, tout, output, data, conf_path)
-	scan(ip, output, data, pscan_threads)
-	crawler(target, output, data)
-	hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext)
-	timetravel(target, data, output)
-
-
 try:
 	banner()
 
@@ -198,7 +176,27 @@ try:
 
 	if full:
 		log_writer('Starting full recon...')
-		full_recon()
+
+		from modules.dns import dnsrec
+		from modules.sslinfo import cert
+		from modules.portscan import scan
+		from modules.dirrec import hammer
+		from modules.crawler import crawler
+		from modules.headers import headers
+		from modules.subdom import subdomains
+		from modules.wayback import timetravel
+		from modules.whois import whois_lookup
+
+		headers(target, output, data)
+		cert(hostname, sslp, output, data)
+		whois_lookup(ip, output, data)
+		dnsrec(domain, output, data)
+		if not type_ip:
+			subdomains(domain, tout, output, data, conf_path)
+		scan(ip, output, data, pscan_threads)
+		crawler(target, output, data)
+		hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext)
+		timetravel(target, data, output)
 
 	if headinfo:
 		from modules.headers import headers
