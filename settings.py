@@ -13,9 +13,7 @@ keys_file_path = f'{conf_path}/keys.json'
 conf_file_path = f'{conf_path}/config.json'
 log_file_path = f'{home}/.local/share/finalrecon/run.log'
 
-if path.exists(conf_path):
-	pass
-else:
+if not path.exists(conf_path):
 	from shutil import copytree
 	copytree(src_conf_path, conf_path, dirs_exist_ok=True)
 

@@ -9,20 +9,16 @@ Y = '\033[33m'  # yellow
 
 def export(output, data):
     if output['format'] != 'txt':
-        if output['export'] is True:
+        if output['export']:
             fname = output['file']
             with open(fname, 'w') as outfile:
                 if output['format'] != 'txt':
                     print(f'{R}[-] {C}Invalid Output Format, Valid Formats : {W}txt')
                     exit()
-        else:
-            pass
     elif output['format'] == 'txt':
         fname = output['file']
         with open(fname, 'w') as outfile:
             txt_export(data, outfile)
-    else:
-        pass
 
 
 def txt_unpack(outfile, key, val):
@@ -40,14 +36,12 @@ def txt_unpack(outfile, key, val):
                     txt_unpack(outfile, key, val)
                 else:
                     outfile.write(f'{key}: {val}\n')
-    else:
-        pass
 
 
 def txt_export(data, outfile):
     for key, val in data.items():
         if key.startswith('module'):
-            if val['exported'] is False:
+            if not val['exported']:
                 txt_unpack(outfile, key, val)
                 val['exported'] = True
         elif key.startswith('Type'):

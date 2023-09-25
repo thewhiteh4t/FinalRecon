@@ -144,10 +144,8 @@ def full_recon():
 	cert(hostname, sslp, output, data)
 	whois_lookup(ip, output, data)
 	dnsrec(domain, output, data)
-	if type_ip is False:
+	if not type_ip:
 		subdomains(domain, tout, output, data, conf_path)
-	else:
-		pass
 	scan(ip, output, data, pscan_threads)
 	crawler(target, output, data)
 	hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext)
@@ -157,17 +155,13 @@ def full_recon():
 try:
 	banner()
 
-	if target.startswith(('http', 'https')) is False:
+	if not target.startswith(('http', 'https')):
 		print(f'{R}[-] {C}Protocol Missing, Include {W}http:// {C}or{W} https:// \n')
 		log_writer(f'Protocol missing in {target}, exiting')
 		sys.exit(1)
-	else:
-		pass
 
-	if target.endswith('/') is True:
+	if target.endswith('/'):
 		target = target[:-1]
-	else:
-		pass
 
 	print(f'{G}[+] {C}Target : {W}{target}')
 	ext = tldextract.extract(target)
@@ -202,62 +196,61 @@ try:
 		}
 		log_writer(f'OUTPUT = FORMAT: {output}, DIR: {respath}, FILENAME: {fname}')
 
-	if full is True:
-		log_writer('Starting full recon...')
+	if full:
+    log_writer('Starting full recon...')
 		full_recon()
 
-	if headinfo is True:
+	if headinfo:
 		from modules.headers import headers
 		log_writer('Starting header enum...')
 		headers(target, out_settings, data)
 
-	if sslinfo is True:
+	if sslinfo:
 		from modules.sslinfo import cert
 		log_writer('Starting SSL enum...')
 		cert(hostname, sslp, out_settings, data)
 
-	if whois is True:
+	if whois:
 		from modules.whois import whois_lookup
 		log_writer('Starting whois enum...')
 		whois_lookup(ip, out_settings, data)
 
-	if crawl is True:
+	if crawl:
 		from modules.crawler import crawler
 		log_writer('Starting crawler...')
 		crawler(target, out_settings, data)
 
-	if dns is True:
+	if dns:
 		from modules.dns import dnsrec
 		log_writer('Starting DNS enum...')
 		dnsrec(domain, out_settings, data)
 
-	if subd is True and type_ip is False:
+	if subd and not type_ip:
 		from modules.subdom import subdomains
 		log_writer('Starting subdomain enum...')
 		subdomains(domain, tout, out_settings, data, conf_path)
-	elif subd is True and type_ip is True:
+	
+  elif subd and type_ip:
 		print(f'{R}[-] {C}Sub-Domain Enumeration is Not Supported for IP Addresses{W}\n')
 		log_writer('Sub-Domain Enumeration is Not Supported for IP Addresses, exiting')
 		sys.exit(1)
-	else:
-		pass
 
-	if wback is True:
+	if wback:
 		from modules.wayback import timetravel
 		log_writer('Starting wayback enum...')
 		timetravel(hostname, data, out_settings)
 
-	if pscan is True:
+	if pscan:
 		from modules.portscan import scan
 		log_writer('Starting port scan...')
 		scan(ip, out_settings, data, threads)
 
-	if dirrec is True:
+	if dirrec:
 		from modules.dirrec import hammer
 		log_writer('Starting dir enum...')
 		hammer(target, threads, tout, wdlist, redir, sslv, dserv, out_settings, data, filext)
 
-	if any([full, headinfo, sslinfo, whois, crawl, dns, subd, wback, pscan, dirrec]) is not True:
+	if not any([full, headinfo, sslinfo, whois, crawl, dns, subd, wback, pscan, dirrec]):
 		print(f'\n{R}[-] Error : {C}At least One Argument is Required with URL{W}')
 		log_writer('At least One Argument is Required with URL, exiting')
 		output = 'None'

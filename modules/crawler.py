@@ -52,7 +52,7 @@ def crawler(target, output, data):
 		temp_tgt = target.split('://')[1]
 		pattern = r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5}'
 		custom = bool(re.match(pattern, temp_tgt))
-		if custom is True:
+		if custom:
 			r_url = f'{protocol}://{temp_tgt}/robots.txt'
 			sm_url = f'{protocol}://{temp_tgt}/sitemap.xml'
 			base_url = f'{protocol}://{temp_tgt}'
@@ -88,14 +88,10 @@ def url_filter(target, link):
 	if all([link.startswith('/') is True, link.startswith('//') is False]):
 		ret_url = target + link
 		return ret_url
-	else:
-		pass
 
 	if link.startswith('//') is True:
 		ret_url = link.replace('//', 'http://')
 		return ret_url
-	else:
-		pass
 
 	if all([
 		link.find('//') == -1,
@@ -106,8 +102,6 @@ def url_filter(target, link):
 	):
 		ret_url = f'{target}/{link}'
 		return ret_url
-	else:
-		pass
 
 	if all([
 		link.find('http://') == -1,
@@ -117,8 +111,6 @@ def url_filter(target, link):
 		ret_url = link.replace('../', f'{target}/')
 		ret_url = link.replace('./', f'{target}/')
 		return ret_url
-	else:
-		pass
 	return link
 
 
@@ -147,7 +139,7 @@ async def robots(robo_url, base_url, data, output):
 						tmp_url = url_filter(base_url, url)
 						if tmp_url is not None:
 							r_total.append(url_filter(base_url, url))
-						if url.endswith('xml') is True:
+						if url.endswith('xml'):
 							sm_total.append(url)
 					except Exception as exc:
 						log_writer(f'[crawler.robots] Exception = {exc}')

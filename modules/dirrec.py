@@ -102,8 +102,6 @@ async def filter_out(target, url, status):
 	elif status in {403}:
 		found.append(url)
 		print(f'{R}{status} {C}|{W} {url}')
-	else:
-		pass
 
 
 def dir_output(output, data):
@@ -120,8 +118,6 @@ def dir_output(output, data):
 			elif entry[1] in {403}:
 				if output != 'None':
 					result.setdefault('Status 403', []).append(f'{entry[1]}, {entry[0]}')
-			else:
-				pass
 
 	print(f'\n\n{G}[+] {C}Directories Found   : {W}{len(found)}')
 
