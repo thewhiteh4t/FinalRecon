@@ -13,7 +13,6 @@ from modules.subdomain_modules.virustotal_subs import virust
 from modules.subdomain_modules.shodan_subs import shodan
 from modules.subdomain_modules.certspot_subs import certspot
 from modules.subdomain_modules.wayback_subs import machine
-from modules.subdomain_modules.sonar_subs import sonar
 from modules.subdomain_modules.crtsh_subs import crtsh
 from modules.subdomain_modules.htarget_subs import hackertgt
 
