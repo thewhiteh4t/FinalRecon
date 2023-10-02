@@ -132,25 +132,25 @@ async def robots(robo_url, base_url, data, output):
 					entry.find('Allow') == 0,
 					entry.find('Sitemap') == 0]):
 
-					url = entry.split(': ')
-					try:
-						url = url[1]
-						url = url.strip()
-						tmp_url = url_filter(base_url, url)
-						if tmp_url is not None:
-							r_total.append(url_filter(base_url, url))
-						if url.endswith('xml'):
-							sm_total.append(url)
-					except Exception as exc:
-						log_writer(f'[crawler.robots] Exception = {exc}')
+					url = entry.split(': ', 1)[1].strip()
+					tmp_url = url_filter(base_url, url)
+
+					if tmp_url is not None:
+						r_total.append(url_filter(base_url, url))
+
+					if url.endswith('xml'):
+						sm_total.append(url)
 
 			r_total = set(r_total)
 			print(f'{G}{"[".rjust(8, ".")} {len(r_total)} ]')
 			exporter(data, output, r_total, 'robots')
+
 		elif r_sc == 404:
 			print(f'{R}{"[".rjust(9, ".")} Not Found ]{W}')
+
 		else:
 			print(f'{R}{"[".rjust(9, ".")} {r_sc} ]{W}')
+
 	except Exception as exc:
 		print(f'\n{R}[-] Exception : {C}{exc}{W}')
 		log_writer(f'[crawler.robots] Exception = {exc}')
@@ -163,7 +163,7 @@ async def sitemap(target_url, data, output):
 		sm_rqst = requests.get(target_url, headers=user_agent, verify=False, timeout=10)
 		sm_sc = sm_rqst.status_code
 		if sm_sc == 200:
-			print(G + '['.rjust(8, '.') + ' Found ]' + W)
+			print(f'{G}{"[".rjust(8, ".")} Found ]{W}')
 			print(f'{G}[+] {C}Extracting sitemap Links{W}', end='', flush=True)
 			sm_page = sm_rqst.content
 			sm_soup = bs4.BeautifulSoup(sm_page, 'xml')

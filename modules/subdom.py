@@ -60,15 +60,13 @@ def subdomains(hostname, tout, output, data, conf_path):
 	found = set(found)
 	total = len(found)
 
-	if len(found) != 0:
+	if found:
 		print(f'\n{G}[+] {C}Results : {W}\n')
-		i = 0
-		for url in found:
-			print(url)
-			i += 1
-			if i == 20:
-				print(f'\n{G}[+]{C} Results truncated...{W}')
-				break
+		for url in enumerate(list(found)[:20]):
+			print(url[1])
+
+		if len(found) > 20:
+			print(f'\n{G}[+]{C} Results truncated...{W}')
 
 	print(f'\n{G}[+] {C}Total Unique Sub Domains Found : {W}{total}')
 

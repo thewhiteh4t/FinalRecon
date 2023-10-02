@@ -34,38 +34,32 @@ def timetravel(target, data, output):
 			check_data = check_rqst.text
 			json_chk_data = json.loads(check_data)
 			avail_data = json_chk_data['archived_snapshots']
-			if len(avail_data) != 0:
-				is_avail = True
-				print(G + '['.rjust(5, '.') + ' Available ]')
+			if avail_data:
+				print(f'{G}{"[".rjust(5, ".")} Available ]{W}')
 			else:
-				print(R + '['.rjust(5, '.') + ' N/A ]')
+				print(f'{R}{"[".rjust(5, ".")} N/A ]{W}')
 		else:
 			print(f'\n{R}[-] Status : {C}{check_sc}{W}')
 			log_writer(f'[wayback] Status = {check_sc}, expected 200')
-	except Exception as exc:
-		print(f'\n{R}[-] Exception : {C}{exc}{W}')
-		log_writer(f'[wayback] Exception = {exc}')
 
-	if is_avail is True:
-		print(f'{Y}[!] {C}Fetching URLs{W}', end='', flush=True)
-		wm_url = 'http://web.archive.org/cdx/search/cdx'
+		if avail_data:
+			print(f'{Y}[!] {C}Fetching URLs{W}', end='', flush=True)
+			wm_url = 'http://web.archive.org/cdx/search/cdx'
 
-		payload = {
-			'url': domain_query,
-			'fl': 'original',
-			'fastLatest': 'true',
-			'from': str(last_yr),
-			'to': str(curr_yr)
-		}
+			payload = {
+				'url': domain_query,
+				'fl': 'original',
+				'fastLatest': 'true',
+				'from': str(last_yr),
+				'to': str(curr_yr)
+			}
 
-		try:
 			rqst = requests.get(wm_url, params=payload, timeout=10)
 			r_sc = rqst.status_code
 			if r_sc == 200:
 				r_data = rqst.text
-				if len(r_data) != 0:
-					r_data = r_data.split('\n')
-					r_data = set(r_data)
+				if data:
+					r_data = set(r_data.split('\n'))
 					print(f'{G}{"[".rjust(5, ".")} {len(r_data)} ]{W}')
 					wayback_total.extend(r_data)
 
@@ -80,7 +74,7 @@ def timetravel(target, data, output):
 					print(f'{R}{"[".rjust(5, ".")} Not Found ]{W}')
 			else:
 				print(f'{R}{"[".rjust(5, ".")} {r_sc} ]{W}')
-		except Exception as exc:
-			print(f'\n{R}[-] Exception : {C}{exc}{W}')
-			log_writer(f'[wayback] Exception = {exc}')
+	except Exception as exc:
+		print(f'\n{R}[-] Exception : {C}{exc}{W}')
+		log_writer(f'[wayback] Exception = {exc}')
 	log_writer('[wayback] Completed')
