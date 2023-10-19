@@ -58,7 +58,10 @@ def crawler(target, output, data):
 			base_url = f'{protocol}://{temp_tgt}'
 		else:
 			ext = tldextract.extract(target)
-			hostname = '.'.join(part for part in ext if part)
+			if ext.subdomain:
+				hostname = f'{ext.subdomain}.{ext.domain}.{ext.suffix}'
+			else:
+				hostname = ext.registered_domain
 			base_url = f'{protocol}://{hostname}'
 			r_url = f'{base_url}/robots.txt'
 			sm_url = f'{base_url}/sitemap.xml'
