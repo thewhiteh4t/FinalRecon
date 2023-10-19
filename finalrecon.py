@@ -144,7 +144,12 @@ try:
 	print(f'{G}[+] {C}Target : {W}{target}')
 	ext = tldextract.extract(target)
 	domain = ext.registered_domain
-	hostname = '.'.join(part for part in ext if part)
+	domain_suffix = ext.suffix
+
+	if ext.subdomain:
+		hostname = f'{ext.subdomain}.{ext.domain}.{ext.suffix}'
+	else:
+		hostname = domain
 
 	try:
 		ipaddress.ip_address(hostname)
@@ -189,7 +194,7 @@ try:
 
 		headers(target, out_settings, data)
 		cert(hostname, sslp, out_settings, data)
-		whois_lookup(ip, out_settings, data)
+		whois_lookup(domain, domain_suffix, path_to_script, out_settings, data)
 		dnsrec(domain, out_settings, data)
 		if not type_ip:
 			subdomains(domain, tout, out_settings, data, conf_path)
@@ -211,7 +216,7 @@ try:
 	if whois:
 		from modules.whois import whois_lookup
 		log_writer('Starting whois enum...')
-		whois_lookup(ip, out_settings, data)
+		whois_lookup(domain, domain_suffix, path_to_script, out_settings, data)
 
 	if crawl:
 		from modules.crawler import crawler

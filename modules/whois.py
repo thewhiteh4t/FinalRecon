@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import ipwhois
+import asyncio
+from json import load
 from modules.export import export
 from modules.write_log import log_writer
 
@@ -11,40 +12,51 @@ W = '\033[0m'   # white
 Y = '\033[33m'  # yellow
 
 
-def whois_lookup(ip_addr, output, data):
-	result = {}
-	print(f'\n{Y}[!] Whois Lookup : {W}\n')
-	try:
-		lookup = ipwhois.IPWhois(ip_addr)
-		results = lookup.lookup_whois()
+async def get_whois(domain, server):
+	whois_result = {}
+	reader, writer = await asyncio.open_connection(server, 43)
+	writer.write((domain + '\r\n').encode())
 
-		for key, val in results.items():
-			if val is not None:
-				if isinstance(val, list):
-					for item in val:
-						for key, value in item.items():
-							if value is not None:
-								if not isinstance(value, list):
-									temp_val = value.replace(',', ' ').replace('\r', ' ').replace('\n', ' ')
-									print(f'{G}[+] {C}{key}: {W}{temp_val}')
-									if output != 'None':
-										result.update({str(key): str(temp_val)})
-								else:
-									temp_val = ', '.join(value)
-									print(f'{G}[+] {C}{key}: {W}{temp_val}')
-									if output != 'None':
-										result.update({str(key): str(temp_val)})
-				else:
-					temp_val = val.replace(',', ' ').replace('\r', ' ').replace('\n', ' ')
-					print(f'{G}[+] {C}{key}: {W}{temp_val}')
-					if output != 'None':
-						result.update({str(key): str(temp_val)})
+	raw_resp = b''
+	while True:
+		chunk = await reader.read(4096)
+		if not chunk:
+			break
+		raw_resp += chunk
+
+	writer.close()
+	await writer.wait_closed()
+	raw_result = raw_resp.decode()
+
+	if 'No match for' in raw_result:
+		whois_result = None
+
+	res_parts = raw_result.split('>>>', 1)
+	whois_result['whois'] = res_parts[0]
+	return whois_result
+
+
+def whois_lookup(domain, tld, script_path, output, data):
+	result = {}
+	db_path = f'{script_path}/whois_servers.json'
+	with open(db_path, 'r') as db_file:
+		db_json = load(db_file)
+	print(f'\n{Y}[!] Whois Lookup : {W}\n')
+
+	try:
+		whois_sv = db_json[tld]
+		whois_info = asyncio.run(get_whois(domain, whois_sv))
+		print(whois_info['whois'])
+		result.update(whois_info)
+	except KeyError:
+		print(f'{R}[-] Error : {C}This domain suffix is not supported.{W}')
+		result.update({'Error': 'This domain suffix is not supported.'})
+		log_writer('[whois] Exception = This domain suffix is not supported.')
 	except Exception as exc:
 		print(f'{R}[-] Error : {C}{exc}{W}')
-
-		if output != 'None':
-			result.update({'Error': str(exc)})
+		result.update({'Error': str(exc)})
 		log_writer(f'[whois] Exception = {exc}')
+
 	result.update({'exported': False})
 
 	if output != 'None':
