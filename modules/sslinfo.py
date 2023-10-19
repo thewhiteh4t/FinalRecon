@@ -15,6 +15,7 @@ Y = '\033[33m'  # yellow
 
 def cert(hostname, sslp, output, data):
 	result = {}
+	presence = False
 	print(f'\n{Y}[!] SSL Certificate Information : {W}\n')
 
 	port_test = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -22,27 +23,21 @@ def cert(hostname, sslp, output, data):
 	try:
 		port_test.connect((hostname, sslp))
 		port_test.close()
+		presence = True
 	except Exception:
 		port_test.close()
 		print(f'{R}[-] {C}SSL is not Present on Target URL...Skipping...{W}')
 		result.update({'Error': 'SSL is not Present on Target URL'})
 		log_writer('[sslinfo] SSL is not Present on Target URL...Skipping...')
 
-	ctx = ssl.create_default_context()
-	sock = socket.socket()
-	sock.settimeout(5)
-	ssl_conn = ctx.wrap_socket(sock, server_hostname=hostname)
-
-	try:
-		ssl_conn.connect((hostname, sslp))
-		info = ssl_conn.getpeercert()
-	except Exception:
+	def fetch_cert_alt():
 		info = ssl.get_server_certificate((hostname, sslp))
 		with open(f'{hostname}.pem', 'w') as outfile:
 			outfile.write(info)
 		cert_dict = ssl._ssl._test_decode_cert(f'{hostname}.pem')
 		info = cert_dict
 		os.remove(f'{hostname}.pem')
+		return info
 
 	def unpack(nested_tuple, pair):
 		for item in nested_tuple:
@@ -54,18 +49,31 @@ def cert(hostname, sslp, output, data):
 			else:
 				pair[nested_tuple.index(item)] = item
 
-	pair = {}
-	for key, val in info.items():
-		if isinstance(val, tuple):
-			print(f'{G}[+] {C}{key}{W}')
-			unpack(val, pair)
-			for sub_key, sub_val in pair.items():
-				print(f'\t{G}└╴{C}{sub_key}: {W}{sub_val}')
-				result.update({f'{key}-{sub_key}': sub_val})
-			pair.clear()
-		else:
-			print(f'{G}[+] {C}{key} : {W}{val}')
-			result.update({key: val})
+	def process_cert(info):
+		pair = {}
+		for key, val in info.items():
+			if isinstance(val, tuple):
+				print(f'{G}[+] {C}{key}{W}')
+				unpack(val, pair)
+				for sub_key, sub_val in pair.items():
+					print(f'\t{G}└╴{C}{sub_key}: {W}{sub_val}')
+					result.update({f'{key}-{sub_key}': sub_val})
+				pair.clear()
+			else:
+				print(f'{G}[+] {C}{key} : {W}{val}')
+				result.update({key: val})
+
+	if presence:
+		ctx = ssl.create_default_context()
+		sock = socket.socket()
+		sock.settimeout(5)
+		ssl_conn = ctx.wrap_socket(sock, server_hostname=hostname)
+		try:
+			ssl_conn.connect((hostname, sslp))
+			info = ssl_conn.getpeercert()
+		except Exception:
+			info = fetch_cert_alt()
+		process_cert(info)
 
 	result.update({'exported': False})
 
