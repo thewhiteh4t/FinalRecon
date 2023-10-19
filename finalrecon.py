@@ -27,7 +27,7 @@ log_writer(
 
 import argparse
 
-VERSION = '1.1.5'
+VERSION = '1.1.6'
 log_writer(f'FinalRecon v{VERSION}')
 
 parser = argparse.ArgumentParser(description=f'FinalRecon - The Last Web Recon Tool You Will Need | v{VERSION}')

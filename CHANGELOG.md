@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.1.6
+
+* dependencies reduced
+* logger added
+* adjusted for new tldextract version
+* bevigil added for sub-domain enum
+* refactored
+* sonar sub-domain query disabled
+* improved exception handling in dns enum
+
+---
+
 ## v1.1.5
 
 * fixed some url issues in crawler
