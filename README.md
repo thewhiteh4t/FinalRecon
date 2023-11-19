@@ -293,4 +293,4 @@ python3 finalrecon.py --full <url>
 ```
 
 ## Demo
-[![Youtube](https://i.imgur.com/IQpZ67e.png)](https://www.youtube.com/watch?v=10q_CKnM3x4)
+[![Odysee](https://i.imgur.com/IQpZ67e.png)](https://odysee.com/@thewhiteh4t:2/what%27s-new-in-finalrecon-v1.0.2-osint:c)
