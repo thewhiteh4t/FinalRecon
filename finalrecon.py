@@ -143,7 +143,10 @@ try:
 
 	print(f'{G}[+] {C}Target : {W}{target}')
 	ext = tldextract.extract(target)
+	print(ext)
 	domain = ext.registered_domain
+	if not domain:
+		domain = ext.domain
 	domain_suffix = ext.suffix
 
 	if ext.subdomain:
