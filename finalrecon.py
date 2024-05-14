@@ -18,6 +18,7 @@ conf_path = config.conf_path
 path_to_script = config.path_to_script
 src_conf_path = config.src_conf_path
 meta_file_path = config.meta_file_path
+keys_file_path = config.keys_file_path
 
 log_writer(
 	f'PATHS = HOME:{home}, SCRIPT_LOC:{path_to_script},\
@@ -31,7 +32,7 @@ VERSION = '1.1.6'
 log_writer(f'FinalRecon v{VERSION}')
 
 parser = argparse.ArgumentParser(description=f'FinalRecon - The Last Web Recon Tool You Will Need | v{VERSION}')
-parser.add_argument('url', help='Target URL')
+parser.add_argument('--url', help='Target URL')
 parser.add_argument('--headers', help='Header Information', action='store_true')
 parser.add_argument('--sslinfo', help='SSL Certificate Information', action='store_true')
 parser.add_argument('--whois', help='Whois Lookup', action='store_true')
@@ -44,6 +45,7 @@ parser.add_argument('--ps', help='Fast Port Scan', action='store_true')
 parser.add_argument('--full', help='Full Recon', action='store_true')
 
 ext_help = parser.add_argument_group('Extra Options')
+ext_help.add_argument('-nb', action='store_false', help='Hide Banner')
 ext_help.add_argument('-dt', type=int, help='Number of threads for directory enum [ Default : 30 ]')
 ext_help.add_argument('-pt', type=int, help='Number of threads for port scan [ Default : 50 ]')
 ext_help.add_argument('-T', type=float, help='Request Timeout [ Default : 30.0 ]')
@@ -54,6 +56,7 @@ ext_help.add_argument('-sp', type=int, help='Specify SSL Port [ Default : 443 ]'
 ext_help.add_argument('-d', help='Custom DNS Servers [ Default : 1.1.1.1 ]')
 ext_help.add_argument('-e', help='File Extensions [ Example : txt, xml, php ]')
 ext_help.add_argument('-o', help='Export Format [ Default : txt ]')
+ext_help.add_argument('-k', help='Add API key [ Example : shodan@key ]')
 ext_help.set_defaults(
 	dt=config.dir_enum_th,
 	pt=config.port_scan_th,
@@ -95,12 +98,14 @@ dserv = args.d
 filext = args.e
 subd = args.sub
 output = args.o
+show_banner = args.nb
+add_key = args.k
 
 import socket
 import datetime
 import ipaddress
 import tldextract
-from json import loads
+from json import loads, dumps
 
 type_ip = False
 data = {}
@@ -130,8 +135,34 @@ def banner():
 	print(f'{G}[>]{C} Version      :{W} {VERSION}\n')
 
 
+def save_key(key_string):
+	valid_keys = ['bevigil', 'facebook', 'shodan', 'vt']
+	key_parts = key_string.split('@', 1)
+	key_name = key_parts[0]
+	key_str = key_parts[1]
+	if key_name not in valid_keys:
+		print(f'{R}[-] {C}Invalid key name!{W}')
+		log_writer('Invalid key name, exiting')
+		sys.exit(1)
+	with open(keys_file_path, 'r') as keyfile:
+		keys_json = loads(keyfile.read())
+	keys_json[key_name] = key_str
+	with open(keys_file_path, 'w') as key_update:
+		key_update.write(dumps(keys_json))
+	print(f'{G}[+] {W}{key_name} {C}Key Added!{W}')
+	sys.exit(1)
+
+
 try:
-	banner()
+	if show_banner:
+		banner()
+
+	if add_key:
+		save_key(add_key)
+
+	if not target:
+		print(f'{R}[-] {C}No Target Specified!{W}')
+		sys.exit(1)
 
 	if not target.startswith(('http', 'https')):
 		print(f'{R}[-] {C}Protocol Missing, Include {W}http:// {C}or{W} https:// \n')
