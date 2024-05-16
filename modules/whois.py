@@ -45,7 +45,7 @@ def whois_lookup(domain, tld, script_path, output, data):
 
 	try:
 		whois_sv = db_json[tld]
-		whois_info = asyncio.run(get_whois(domain, whois_sv))
+		whois_info = asyncio.run(get_whois(f'{domain}.{tld}', whois_sv))
 		print(whois_info['whois'])
 		result.update(whois_info)
 	except KeyError:

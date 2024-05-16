@@ -6,32 +6,29 @@ C = '\033[36m'  # cyan
 W = '\033[0m'   # white
 Y = '\033[33m'  # yellow
 
-import psycopg2
+from json import loads
 import modules.subdom as parent
 from modules.write_log import log_writer
 
-
-async def crtsh(hostname):
+async def crtsh(hostname, session):
 	print(f'{Y}[!] {C}Requesting {G}crt.sh{W}')
+	url = f'https://crt.sh/?dNSName=%25.{hostname}&output=json'
+
 	try:
-		conn = psycopg2.connect(
-			host="crt.sh",
-			database="certwatch",
-			user="guest",
-			port="5432"
-		)
-		conn.autocommit = True
-		cur = conn.cursor()
-		query = f"SELECT ci.NAME_VALUE NAME_VALUE FROM certificate_identity ci WHERE ci.NAME_TYPE = 'dNSName' AND reverse(lower(ci.NAME_VALUE)) LIKE reverse(lower('%.{hostname}'))"
-		cur.execute(query)
-		result = cur.fetchall()
-		cur.close()
-		conn.close()
-		tmp_list = []
-		for url in result:
-			tmp_list.append(url[0])
-		print(f'{G}[+] {Y}CRT.sh {W}found {C}{len(tmp_list)} {W}subdomains!')
-		parent.found.extend(tmp_list)
+		async with session.get(url) as resp:
+			status = resp.status
+			if status == 200:
+				data = await resp.text()
+				data_json = loads(data)
+				tmp_list = []
+				for entry in data_json:
+					subdomain = entry['name_value']
+					tmp_list.append(subdomain)
+				print(f'{G}[+] {Y}crt.sh {W}found {C}{len(tmp_list)} {W}subdomains!')
+				parent.found.extend(tmp_list)
+			else:
+				print(f'{R}[-] {C}HackerTarget Status : {W}{status}')
+				log_writer(f'[htarget_subs] Status = {status}, expected 200')
 	except Exception as exc:
 		print(f'{R}[-] {C}crtsh Exception : {W}{exc}')
 		log_writer(f'[crtsh_subs] Exception = {exc}')

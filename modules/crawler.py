@@ -31,14 +31,14 @@ js_crawl_total = []
 sm_crawl_total = []
 
 
-def crawler(target, output, data):
+def crawler(target, protocol, netloc, output, data):
 	global r_url, sm_url
 	print(f'\n{Y}[!] Starting Crawler...{W}\n')
 
 	try:
 		rqst = requests.get(target, headers=user_agent, verify=False, timeout=10)
 	except Exception as exc:
-		print(f'{R} [-] Exception : {C}{exc}{W}')
+		print(f'{R}[-] Exception : {C}{exc}{W}')
 		log_writer(f'[crawler] Exception = {exc}')
 		return
 
@@ -47,24 +47,9 @@ def crawler(target, output, data):
 		page = rqst.content
 		soup = bs4.BeautifulSoup(page, 'lxml')
 
-		protocol = target.split('://')
-		protocol = protocol[0]
-		temp_tgt = target.split('://')[1]
-		pattern = r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5}'
-		custom = bool(re.match(pattern, temp_tgt))
-		if custom:
-			r_url = f'{protocol}://{temp_tgt}/robots.txt'
-			sm_url = f'{protocol}://{temp_tgt}/sitemap.xml'
-			base_url = f'{protocol}://{temp_tgt}'
-		else:
-			ext = tldextract.extract(target)
-			if ext.subdomain:
-				hostname = f'{ext.subdomain}.{ext.domain}.{ext.suffix}'
-			else:
-				hostname = ext.registered_domain
-			base_url = f'{protocol}://{hostname}'
-			r_url = f'{base_url}/robots.txt'
-			sm_url = f'{base_url}/sitemap.xml'
+		r_url = f'{protocol}://{netloc}/robots.txt'
+		sm_url = f'{protocol}://{netloc}/sitemap.xml'
+		base_url = f'{protocol}://{netloc}'
 
 		loop = asyncio.new_event_loop()
 		asyncio.set_event_loop(loop)

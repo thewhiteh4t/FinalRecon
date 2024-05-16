@@ -106,6 +106,7 @@ import datetime
 import ipaddress
 import tldextract
 from json import loads, dumps
+from urllib import parse
 
 type_ip = False
 data = {}
@@ -173,25 +174,44 @@ try:
 		target = target[:-1]
 
 	print(f'{G}[+] {C}Target : {W}{target}')
-	ext = tldextract.extract(target)
-	domain = ext.registered_domain
-	if not domain:
-		domain = ext.domain
-	domain_suffix = ext.suffix
 
-	if ext.subdomain:
-		hostname = f'{ext.subdomain}.{ext.domain}.{ext.suffix}'
+	split_url = parse.urlsplit(target)
+	extractor = tldextract.TLDExtract()
+	parsed_url = extractor.extract_urllib(split_url)
+	protocol = split_url.scheme
+
+	if split_url.port:
+		if not parsed_url.subdomain:
+			netloc = parsed_url.domain                              # localhost:8000
+			domain = netloc.split(':')[0]
+			domain_suffix = ''
+			hostname = domain
+		else:
+			netloc = f'{parsed_url.subdomain}.{parsed_url.domain}'  # abc.com:8000
+			domain = parsed_url.subdomain
+			domain_suffix = parsed_url.domain.split(':')[0]
+			hostname = f'{domain}.{domain_suffix}'
 	else:
-		hostname = domain
+		if len(parsed_url.registered_domain) == 0:
+			netloc = parsed_url.domain                              # 8.8.8.8
+			domain = ''
+			domain_suffix = ''
+		else:
+			netloc = parsed_url.registered_domain                   # abc.com
+			domain = parsed_url.domain
+			domain_suffix = parsed_url.suffix
+		hostname = netloc
 
 	try:
 		ipaddress.ip_address(hostname)
 		type_ip = True
 		ip = hostname
+		private_ip = ipaddress.ip_address(ip).is_private
 	except Exception:
 		try:
 			ip = socket.gethostbyname(hostname)
 			print(f'\n{G}[+] {C}IP Address : {W}{str(ip)}')
+			private_ip = ipaddress.ip_address(ip).is_private
 		except Exception as e:
 			print(f'\n{R}[-] {C}Unable to Get IP : {W}{str(e)}')
 			sys.exit(1)
@@ -228,11 +248,11 @@ try:
 		headers(target, out_settings, data)
 		cert(hostname, sslp, out_settings, data)
 		whois_lookup(domain, domain_suffix, path_to_script, out_settings, data)
-		dnsrec(domain, out_settings, data)
-		if not type_ip:
-			subdomains(domain, tout, out_settings, data, conf_path)
+		dnsrec(hostname, out_settings, data)
+		if not type_ip and not private_ip:
+			subdomains(hostname, tout, out_settings, data, conf_path)
 		scan(ip, out_settings, data, pscan_threads)
-		crawler(target, out_settings, data)
+		crawler(target, protocol, netloc, out_settings, data)
 		hammer(target, threads, tout, wdlist, redir, sslv, dserv, out_settings, data, filext)
 		timetravel(target, data, out_settings)
 
@@ -254,17 +274,17 @@ try:
 	if crawl:
 		from modules.crawler import crawler
 		log_writer('Starting crawler...')
-		crawler(target, out_settings, data)
+		crawler(target, protocol, netloc, out_settings, data)
 
 	if dns:
 		from modules.dns import dnsrec
 		log_writer('Starting DNS enum...')
-		dnsrec(domain, out_settings, data)
+		dnsrec(hostname, out_settings, data)
 
-	if subd and not type_ip:
+	if subd and not type_ip and not private_ip:
 		from modules.subdom import subdomains
 		log_writer('Starting subdomain enum...')
-		subdomains(domain, tout, out_settings, data, conf_path)
+		subdomains(hostname, tout, out_settings, data, conf_path)
 
 	elif subd and type_ip:
 		print(f'{R}[-] {C}Sub-Domain Enumeration is Not Supported for IP Addresses{W}\n')

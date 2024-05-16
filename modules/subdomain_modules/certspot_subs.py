@@ -26,7 +26,7 @@ async def certspot(hostname, session):
 			if status == 200:
 				json_data = await resp.text()
 				json_read = loads(json_data)
-				print(f'{G}[+] {Y}Certsport {W}found {C}{len(json_read)} {W}subdomains!')
+				print(f'{G}[+] {Y}Certspotter {W}found {C}{len(json_read)} {W}subdomains!')
 				for i in range(0, len(json_read)):
 					domains = json_read[i]['dns_names']
 					parent.found.extend(domains)

@@ -36,9 +36,9 @@ async def query(hostname, tout, conf_path):
 			virust(hostname, conf_path, session),
 			shodan(hostname, conf_path, session),
 			certspot(hostname, session),
-			machine(hostname, session),
+			#machine(hostname, session),
 			hackertgt(hostname, session),
-			crtsh(hostname)
+			crtsh(hostname, session)
 		)
 	await session.close()
 
