@@ -4,3 +4,4 @@ lxml
 dnslib
 aiohttp
 tldextract
+cryptography
