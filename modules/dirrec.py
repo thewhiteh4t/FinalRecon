@@ -16,6 +16,7 @@ Y = '\033[33m'  # yellow
 header = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:72.0) Gecko/20100101 Firefox/72.0'}
 count = 0
 wm_count = 0
+exc_count = 0
 found = []
 responses = []
 curr_yr = date.today().year
@@ -23,13 +24,13 @@ last_yr = curr_yr - 1
 
 
 async def fetch(url, session, redir):
-	global responses
+	global responses, exc_count
 	try:
 		async with session.get(url, headers=header, allow_redirects=redir) as response:
 			responses.append((url, response.status))
 			return response.status
 	except Exception as exc:
-		print(f'{R}[-] {C}Exception : {W}' + str(exc).strip('\n'))
+		exc_count += 1
 		log_writer(f'[dirrec] Exception : {exc}')
 
 
@@ -119,7 +120,8 @@ def dir_output(output, data):
 				if output != 'None':
 					result.setdefault('Status 403', []).append(f'{entry[1]}, {entry[0]}')
 
-	print(f'\n\n{G}[+] {C}Directories Found   : {W}{len(found)}')
+	print(f'\n\n{G}[+] {C}Directories Found   : {W}{len(found)}\n')
+	print(f'{Y}[!] {C}Exceptions          : {W}{exc_count}')
 
 	if output != 'None':
 		result.update({'exported': False})

@@ -31,7 +31,7 @@ import argparse
 VERSION = '1.1.6'
 log_writer(f'FinalRecon v{VERSION}')
 
-parser = argparse.ArgumentParser(description=f'FinalRecon - The Last Web Recon Tool You Will Need | v{VERSION}')
+parser = argparse.ArgumentParser(description=f'FinalRecon - All in One Web Recon | v{VERSION}')
 parser.add_argument('--url', help='Target URL')
 parser.add_argument('--headers', help='Header Information', action='store_true')
 parser.add_argument('--sslinfo', help='SSL Certificate Information', action='store_true')
@@ -56,6 +56,7 @@ ext_help.add_argument('-sp', type=int, help='Specify SSL Port [ Default : 443 ]'
 ext_help.add_argument('-d', help='Custom DNS Servers [ Default : 1.1.1.1 ]')
 ext_help.add_argument('-e', help='File Extensions [ Example : txt, xml, php ]')
 ext_help.add_argument('-o', help='Export Format [ Default : txt ]')
+ext_help.add_argument('-cd', help='Change export directory [ Default : ~/.local/share/finalrecon ]')
 ext_help.add_argument('-k', help='Add API key [ Example : shodan@key ]')
 ext_help.set_defaults(
 	dt=config.dir_enum_th,
@@ -67,7 +68,8 @@ ext_help.set_defaults(
 	sp=config.ssl_port,
 	d=config.dir_enum_dns,
 	e=config.dir_enum_ext,
-	o=config.export_fmt
+	o=config.export_fmt,
+	cd=config.usr_data
 )
 
 try:
@@ -100,6 +102,7 @@ subd = args.sub
 output = args.o
 show_banner = args.nb
 add_key = args.k
+output_dir = args.cd
 
 import socket
 import datetime
@@ -219,7 +222,7 @@ try:
 	start_time = datetime.datetime.now()
 
 	if output != 'None':
-		fpath = usr_data
+		fpath = output_dir
 		dt_now = str(datetime.datetime.now().strftime('%d-%m-%Y_%H:%M:%S'))
 		fname = f'{fpath}fr_{hostname}_{dt_now}.{output}'
 		respath = f'{fpath}fr_{hostname}_{dt_now}'
