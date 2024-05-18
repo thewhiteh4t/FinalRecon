@@ -27,4 +27,4 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: thewhiteh4t/FinalRecon:latest
+          tags: thewhiteh4t/finalrecon:latest
