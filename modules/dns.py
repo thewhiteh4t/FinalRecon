@@ -12,7 +12,7 @@ W = '\033[0m'   # white
 Y = '\033[33m'  # yellow
 
 
-def dnsrec(domain, output, data):
+def dnsrec(domain, dns_servers, output, data):
 	result = {}
 	print(f'\n{Y}[!] Starting DNS Enumeration...{W}\n')
 	dns_records = ['A', 'AAAA', 'AFSDB', 'APL', 'CAA', 'CDNSKEY', 'CDS', 'CERT',
@@ -24,7 +24,7 @@ def dnsrec(domain, output, data):
 	full_ans = []
 
 	res = dns.asyncresolver.Resolver(configure=False)
-	res.nameservers = ['1.1.1.1', '1.0.0.1', '8.8.8.8', '8.8.4.4', '9.9.9.9', '149.112.112.112']
+	res.nameservers = dns_servers
 
 
 	async def fetch_records(res, domain, record):

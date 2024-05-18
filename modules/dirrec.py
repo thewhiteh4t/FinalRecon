@@ -71,11 +71,10 @@ async def consumer(queue, target, session, redir, total_num_words):
 		print(f'{Y}[!] {C}Requests : {W}{count}/{total_num_words}', end='\r')
 
 
-async def run(target, threads, tout, wdlist, redir, sslv, dserv, filext, total_num_words):
+async def run(target, threads, tout, wdlist, redir, sslv, filext, total_num_words):
 	queue = asyncio.Queue(maxsize=threads)
 
-	resolver = aiohttp.AsyncResolver(nameservers=dserv.split(', '))
-	conn = aiohttp.TCPConnector(limit=threads, resolver=resolver, family=socket.AF_INET, verify_ssl=sslv)
+	conn = aiohttp.TCPConnector(limit=threads, family=socket.AF_INET, verify_ssl=sslv)
 	timeout = aiohttp.ClientTimeout(total=None, sock_connect=tout, sock_read=tout)
 	async with aiohttp.ClientSession(connector=conn, timeout=timeout) as session:
 		distrib = asyncio.create_task(insert(queue, filext, target, wdlist, redir))
@@ -131,14 +130,13 @@ def dir_output(output, data):
 		export(output, data)
 
 
-def hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, filext):
+def hammer(target, threads, tout, wdlist, redir, sslv, output, data, filext):
 	print(f'\n{Y}[!] Starting Directory Enum...{W}\n')
 	print(f'{G}[+] {C}Threads          : {W}{threads}')
 	print(f'{G}[+] {C}Timeout          : {W}{tout}')
 	print(f'{G}[+] {C}Wordlist         : {W}{wdlist}')
 	print(f'{G}[+] {C}Allow Redirects  : {W}{redir}')
 	print(f'{G}[+] {C}SSL Verification : {W}{sslv}')
-	print(f'{G}[+] {C}DNS Servers      : {W}{dserv}')
 	with open(wdlist, 'r') as wordlist:
 		num_words = sum(1 for i in wordlist)
 	print(f'{G}[+] {C}Wordlist Size    : {W}{num_words}')
@@ -150,7 +148,7 @@ def hammer(target, threads, tout, wdlist, redir, sslv, dserv, output, data, file
 
 	loop = asyncio.new_event_loop()
 	asyncio.set_event_loop(loop)
-	loop.run_until_complete(run(target, threads, tout, wdlist, redir, sslv, dserv, filext, total_num_words))
+	loop.run_until_complete(run(target, threads, tout, wdlist, redir, sslv, filext, total_num_words))
 	dir_output(output, data)
 	loop.close()
 	log_writer('[dirrec] Completed')

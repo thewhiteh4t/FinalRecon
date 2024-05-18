@@ -66,7 +66,7 @@ ext_help.set_defaults(
 	r=config.dir_enum_redirect,
 	s=config.dir_enum_sslv,
 	sp=config.ssl_port,
-	d=config.dir_enum_dns,
+	d=config.custom_dns,
 	e=config.dir_enum_ext,
 	o=config.export_fmt,
 	cd=config.usr_data
@@ -251,12 +251,12 @@ try:
 		headers(target, out_settings, data)
 		cert(hostname, sslp, out_settings, data)
 		whois_lookup(domain, domain_suffix, path_to_script, out_settings, data)
-		dnsrec(hostname, out_settings, data)
+		dnsrec(hostname, dserv, out_settings, data)
 		if not type_ip and not private_ip:
 			subdomains(hostname, tout, out_settings, data, conf_path)
 		scan(ip, out_settings, data, pscan_threads)
 		crawler(target, protocol, netloc, out_settings, data)
-		hammer(target, threads, tout, wdlist, redir, sslv, dserv, out_settings, data, filext)
+		hammer(target, threads, tout, wdlist, redir, sslv, out_settings, data, filext)
 		timetravel(target, data, out_settings)
 
 	if headinfo:
@@ -282,7 +282,7 @@ try:
 	if dns:
 		from modules.dns import dnsrec
 		log_writer('Starting DNS enum...')
-		dnsrec(hostname, out_settings, data)
+		dnsrec(hostname, dserv, out_settings, data)
 
 	if subd and not type_ip and not private_ip:
 		from modules.subdom import subdomains
@@ -307,7 +307,7 @@ try:
 	if dirrec:
 		from modules.dirrec import hammer
 		log_writer('Starting dir enum...')
-		hammer(target, threads, tout, wdlist, redir, sslv, dserv, out_settings, data, filext)
+		hammer(target, threads, tout, wdlist, redir, sslv, out_settings, data, filext)
 
 	if not any([full, headinfo, sslinfo, whois, crawl, dns, subd, wback, pscan, dirrec]):
 		print(f'\n{R}[-] Error : {C}At least One Argument is Required with URL{W}')
