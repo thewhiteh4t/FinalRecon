@@ -1,5 +1,5 @@
-FROM alpine:3.15.4
-RUN apk update 
+FROM alpine:latest
+RUN apk update
 RUN apk add \
 git \
 python3 \
