@@ -50,7 +50,7 @@ def dnsrec(domain, output, data):
 
 	for entry in full_ans:
 		entry_parts = entry.split(' : ')
-		print(f'{C}{entry_parts[0]} {'\t'}: {W}{entry_parts[1]}')
+		print(f'{C}{entry_parts[0]} \t: {W}{entry_parts[1]}')
 		if output != 'None':
 			result.setdefault('dns', []).append(entry)
 
@@ -58,7 +58,7 @@ def dnsrec(domain, output, data):
 	try:
 		dmarc_ans = asyncio.run(fetch_records(res, dmarc_target, 'TXT'))
 		for entry in dmarc_ans:
-			print(f'{C}DMARK {'\t'}: {W}{entry.to_text()}')
+			print(f'{C}DMARK \t: {W}{entry.to_text()}')
 			if output != 'None':
 				result.setdefault('dmarc', []).append(f'DMARK : {entry.to_text()}')
 	except dns.resolver.NXDOMAIN as exc:
