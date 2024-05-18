@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import dnslib
+import asyncio
+import dns.asyncresolver
 from modules.export import export
 from modules.write_log import log_writer
 
@@ -14,60 +15,58 @@ Y = '\033[33m'  # yellow
 def dnsrec(domain, output, data):
 	result = {}
 	print(f'\n{Y}[!] Starting DNS Enumeration...{W}\n')
-	dns_records = ['A', 'AAAA', 'ANY', 'CAA', 'CNAME', 'MX', 'NS', 'TXT']
+	dns_records = ['A', 'AAAA', 'AFSDB', 'APL', 'CAA', 'CDNSKEY', 'CDS', 'CERT',
+                'CNAME', 'CSYNC', 'DHCID', 'DLV', 'DNAME', 'DNSKEY', 'DS', 'EUI48',
+                'EUI64', 'HINFO', 'HIP', 'HTTPS', 'IPSECKEY', 'KEY', 'KX', 'LOC',
+                'MX', 'NAPTR', 'NS', 'NSEC', 'NSEC3', 'NSEC3PARAM', 'OPENPGPKEY', 'PTR',
+                'RP', 'RRSIG', 'SIG', 'SMIMEA', 'SOA', 'SRV', 'SSHFP', 'SVCB',
+                'TA', 'TKEY', 'TLSA', 'TSIG', 'TXT', 'URI', 'ZONEMD']
 	full_ans = []
 
+	res = dns.asyncresolver.Resolver()
+	res.nameservers = ['1.1.1.1', '1.0.0.1', '8.8.8.8', '8.8.4.4', '9.9.9.9', '149.112.112.112']
+
+
+	async def fetch_records(res, domain, record):
+		answer = await res.resolve(domain, record)
+		return answer
+
+
 	for dns_record in dns_records:
-		query = dnslib.DNSRecord.question(domain, dns_record)
 		try:
-			pkt = query.send('8.8.8.8', 53, tcp='UDP')
-			ans = dnslib.DNSRecord.parse(pkt)
-			ans = str(ans)
-			ans = ans.split('\n')
-			full_ans.extend(ans)
-		except ConnectionRefusedError as exc:
-			print(f'\n{R}[-] {C}Exception : {W}{exc}\nServer is probably not listening!')
+			ans = asyncio.run(fetch_records(res, domain, dns_record))
+			for record_data in ans:
+				full_ans.append(f'{dns_record} : {record_data.to_text()}')
+		except dns.resolver.NoAnswer as exc:
 			log_writer(f'[dns] Exception = {exc}')
+		except dns.resolver.NoMetaqueries as exc:
+			log_writer(f'[dns] Exception = {exc}')
+		except dns.resolver.NXDOMAIN as exc:
+			log_writer(f'[dns] Exception = {exc}')
+			print(f'{R}[-] {C}DNS Records Not Found!{W}')
+			if output != 'None':
+				result.setdefault('dns', ['DNS Records Not Found'])
 			return
 
-	full_ans = set(full_ans)
-	dns_found = []
-
 	for entry in full_ans:
-		if not entry.startswith(';'):
-			dns_found.append(entry)
-
-	if not dns_found:
-		print(f'{R}[-] {C}DNS Records Not Found!{W}')
+		entry_parts = entry.split(' : ')
+		print(f'{C}{entry_parts[0]} {'\t'}: {W}{entry_parts[1]}')
 		if output != 'None':
-			result.setdefault('dns', ['DNS Records Not Found'])
-	else:
-		for entry in dns_found:
-			print(f'{C}{entry}{W}')
-			if output != 'None':
-				result.setdefault('dns', []).append(entry)
+			result.setdefault('dns', []).append(entry)
 
 	dmarc_target = f'_dmarc.{domain}'
-	query = dnslib.DNSRecord.question(dmarc_target, 'TXT')
-	pkt = query.send('8.8.8.8', 53, tcp='UDP')
-	dmarc_ans = dnslib.DNSRecord.parse(pkt)
-	dmarc_ans = str(dmarc_ans)
-	dmarc_ans = dmarc_ans.split('\n')
-	dmarc_found = []
-
-	for entry in dmarc_ans:
-		if entry.startswith('_dmarc'):
-			dmarc_found.append(entry)
-
-	if not dmarc_found:
+	try:
+		dmarc_ans = asyncio.run(fetch_records(res, dmarc_target, 'TXT'))
+		for entry in dmarc_ans:
+			print(f'{C}DMARK {'\t'}: {W}{entry.to_text()}')
+			if output != 'None':
+				result.setdefault('dmarc', []).append(f'DMARK : {entry.to_text()}')
+	except dns.resolver.NXDOMAIN as exc:
+		log_writer(f'[dns.dmark] Exception = {exc}')
 		print(f'\n{R}[-] {C}DMARC Record Not Found!{W}')
 		if output != 'None':
 			result.setdefault('dmarc', ['DMARC Record Not Found!'])
-	else:
-		for entry in dmarc_found:
-			print(f'{C}{entry}{W}')
-			if output != 'None':
-				result.setdefault('dmarc', []).append(entry)
+
 	result.update({'exported': False})
 
 	if output != 'None':

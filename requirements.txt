@@ -1,7 +1,7 @@
 requests
 bs4
 lxml
-dnslib
+dnspython
 aiohttp
 tldextract
 cryptography
