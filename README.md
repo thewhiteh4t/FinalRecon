@@ -30,7 +30,7 @@ FinalRecon is an all in one **automatic web reconnaissance** tool written in pyt
   </a>
 </p>
 
-## Featured
+## Featured On
 
 ### Python For OSINT
 * Hakin9 April 2020
@@ -66,25 +66,21 @@ FinalRecon provides detailed information such as :
   * Links from Wayback Machine from Last 1 Year
 
 * DNS Enumeration
-  * A, AAAA, ANY, CNAME, MX, NS, SOA, TXT Records
+  * Over 40 types of Records are queried
   * DMARC Records
 
 * Subdomain Enumeration
   * Data Sources
-    * BuffOver
     * crt.sh
-    * ThreatCrowd
     * AnubisDB
     * ThreatMiner
-    * Facebook Certificate Transparency API
-      * Auth Token is Required for this source, read Configuration below
-    * VirusTotal
-    	* API Key is Required
-    * Shodan
-      * API Key is Required
     * CertSpotter
+    * Facebook (API)
+    * VirusTotal (API)
+    * Shodan (API)
+    * BeVigil (API)
 
-* Directory Searching
+* Directory Enumeration
   * Support for File Extensions
 
 * Wayback Machine
@@ -104,70 +100,55 @@ FinalRecon provides detailed information such as :
 ### API Keys
 
 Some Modules Use API Keys to fetch data from different resources, these are optional, if you are not using an API key, they will be simply skipped.
-If you are interested in using these resources you can store your API key in **keys.json** file.
+
+You can use **`-k`** to add the keys which will be saved in config directory automatically
+
+```bash
+# Usage
+python3 finalrecon.py -k '<API NAME>@<API KEY>'
+
+Valid Keys : 'bevigil', 'facebook', 'shodan', 'virustotal'
+
+# Example :
+python3 finalrecon.py -k 'shodan@kl32lcdqwcdfv'
+```
 
 `Path --> $HOME/.config/finalrecon/keys.json`
 
-If you don't want to use a key for a certain data source just set its value to `null`, by default values of all available data sources are null.
+| Source | Module | Link |
+|--------|--------|------|
+| Facebook | Sub Domain Enum | https://developers.facebook.com/docs/facebook-login/access-tokens |
+| VirusTotal | Sub Domain Enum | https://www.virustotal.com/gui/my-apikey |
+| Shodan | Sub Domain Enum | https://developer.shodan.io/api/requirements |
+| BeVigil | Sub Domain Enum | https://bevigil.com/osint-api |
 
-#### Facebook Developers API
+### JSON Config File
 
-This data source is used to fetch **Certificate Transparency** data which is used in **Sub Domain Enumeration**
+Default config file is available at `~/.config/finalrecon/config.json`
 
-Key Format : `APP-ID|APP-SECRET`
-
-Example :
-
-```
+```json
 {
-  "facebook": "9go1kx9icpua5cm|20yhraldrxt6fi6z43r3a6ci2vckkst3"
+    "common": {
+        "timeout": 30
+    },
+    "ssl_cert": {
+        "ssl_port": 443
+    },
+    "port_scan": {
+        "threads": 50
+    },
+    "dir_enum": {
+        "threads": 50,
+        "redirect": false,
+        "verify_ssl": false,
+        "dns_server": "8.8.8.8, 8.8.4.4, 1.1.1.1, 1.0.0.1",
+        "extension": ""
+    },
+    "export": {
+        "format": "txt"
+    }
 }
 ```
-
-Read More : https://developers.facebook.com/docs/facebook-login/access-tokens
-
-#### VirusTotal API
-
-This data source is used to fetch **Sub Domains** which are used in **Sub Domain Enumeration**
-
-Key Format : `KEY`
-
-Example :
-
-```
-{
-	"virustotal": "eu4zc5f0skv15fnw54nkhj4m26zbteh9409aklpxhfpp68s8d4l63pn13rsojt9y"
-}
-```
-
-#### Shodan API
-
-This data source is used to fetch **Sub Domains** which are used in **Sub Domain Enumeration**
-
-Key Format : `KEY`
-
-Example :
-
-```
-{
-	"shodan": "eu4zc5f0skv15fnw54nkhj"
-}
-```
-
-#### BeVigil API
-
-This data source is used to fetch **Sub Domains** which are used in **Sub Domain Enumeration**
-
-Key Format : `KEY`
-
-Example :
-
-```
-{
-	"bevigil": "bteh9409aklpxhfpp68s8d"
-}
-```
-
 
 ## Tested on
 
@@ -228,19 +209,11 @@ And then use `finalrecon` to start your scan.
 ## Usage
 
 ```bash
-usage: finalrecon.py [-h] [--headers] [--sslinfo] [--whois] [--crawl]
-                     [--dns] [--sub] [--dir] [--wayback] [--ps]
-                     [--full] [-dt DT] [-pt PT] [-T T] [-w W] [-r]
-                     [-s] [-sp SP] [-d D] [-e E] [-o O]
-                     url
-
-FinalRecon - The Last Web Recon Tool You Will Need | v1.1.5
-
-positional arguments:
-  url         Target URL
+FinalRecon - All in One Web Recon | v1.1.6
 
 options:
   -h, --help  show this help message and exit
+  --url URL   Target URL
   --headers   Header Information
   --sslinfo   SSL Certificate Information
   --whois     Whois Lookup
@@ -253,6 +226,7 @@ options:
   --full      Full Recon
 
 Extra Options:
+  -nb         Hide Banner
   -dt DT      Number of threads for directory enum [ Default : 30 ]
   -pt PT      Number of threads for port scan [ Default : 50 ]
   -T T        Request Timeout [ Default : 30.0 ]
@@ -264,6 +238,9 @@ Extra Options:
   -d D        Custom DNS Servers [ Default : 1.1.1.1 ]
   -e E        File Extensions [ Example : txt, xml, php ]
   -o O        Export Format [ Default : txt ]
+  -cd CD      Change export directory [ Default :
+              ~/.local/share/finalrecon ]
+  -k K        Add API key [ Example : shodan@key ]
 ```
 
 ```bash
