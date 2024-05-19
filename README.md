@@ -129,7 +129,8 @@ Default config file is available at `~/.config/finalrecon/config.json`
 ```json
 {
     "common": {
-        "timeout": 30
+        "timeout": 30,
+        "dns_servers": "8.8.8.8, 8.8.4.4, 1.1.1.1, 1.0.0.1"
     },
     "ssl_cert": {
         "ssl_port": 443
@@ -141,7 +142,6 @@ Default config file is available at `~/.config/finalrecon/config.json`
         "threads": 50,
         "redirect": false,
         "verify_ssl": false,
-        "dns_server": "8.8.8.8, 8.8.4.4, 1.1.1.1, 1.0.0.1",
         "extension": ""
     },
     "export": {
