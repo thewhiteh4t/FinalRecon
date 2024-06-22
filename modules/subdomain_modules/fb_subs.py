@@ -1,22 +1,36 @@
 #!/usr/bin/env python3
 
+from os import environ
+from json import loads, dumps
+import modules.subdom as parent
+from modules.write_log import log_writer
+
 R = '\033[31m'  # red
 G = '\033[32m'  # green
 C = '\033[36m'  # cyan
 W = '\033[0m'   # white
 Y = '\033[33m'  # yellow
 
-from json import loads
-import modules.subdom as parent
-from modules.write_log import log_writer
-
 
 async def fb_cert(hostname, conf_path, session):
-	with open(f'{conf_path}/keys.json', 'r') as keyfile:
-		json_read = keyfile.read()
+	fb_key = environ.get('FR_FB_KEY')
 
-	json_load = loads(json_read)
-	fb_key = json_load['facebook']
+	if not fb_key:
+		log_writer('[fb_subs] key missing in env')
+		with open(f'{conf_path}/keys.json', 'r') as keyfile:
+			json_read = keyfile.read()
+
+		json_load = loads(json_read)
+		try:
+			fb_key = json_load['facebook']
+		except KeyError:
+			log_writer('[fb_subs] key missing in keys.json')
+			with open(f'{conf_path}/keys.json', 'w') as outfile:
+				json_load['facebook'] = None
+				fb_key = None
+				outfile.write(
+					dumps(json_load, sort_keys=True, indent=4)
+				)
 
 	if fb_key is not None:
 		print(f'{Y}[!] {C}Requesting {G}Facebook{W}')

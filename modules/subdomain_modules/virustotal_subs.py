@@ -1,22 +1,36 @@
 #!/usr/bin/env python3
 
+from os import environ
+from json import loads, dumps
+import modules.subdom as parent
+from modules.write_log import log_writer
+
 R = '\033[31m'  # red
 G = '\033[32m'  # green
 C = '\033[36m'  # cyan
 W = '\033[0m'   # white
 Y = '\033[33m'  # yellow
 
-from json import loads
-import modules.subdom as parent
-from modules.write_log import log_writer
-
 
 async def virust(hostname, conf_path, session):
-	with open(f'{conf_path}/keys.json', 'r') as keyfile:
-		json_read = keyfile.read()
+	vt_key = environ.get('FR_VT_KEY')
 
-	json_load = loads(json_read)
-	vt_key = json_load['virustotal']
+	if not vt_key:
+		log_writer('[virustotal_subs] key missing in env')
+		with open(f'{conf_path}/keys.json', 'r') as keyfile:
+			json_read = keyfile.read()
+
+		json_load = loads(json_read)
+		try:
+			vt_key = json_load['virustotal']
+		except KeyError:
+			log_writer('[virustotal_subs] key missing in keys.json')
+			with open(f'{conf_path}/keys.json', 'w') as outfile:
+				json_load['virustotal'] = None
+				vt_key = None
+				outfile.write(
+					dumps(json_load, sort_keys=True, indent=4)
+				)
 
 	if vt_key is not None:
 		print(f'{Y}[!] {C}Requesting {G}VirusTotal{W}')

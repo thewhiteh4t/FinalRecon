@@ -1,22 +1,36 @@
 #!/usr/bin/env python3
 
+from os import environ
+from json import loads, dumps
+import modules.subdom as parent
+from modules.write_log import log_writer
+
 R = '\033[31m'  # red
 G = '\033[32m'  # green
 C = '\033[36m'  # cyan
 W = '\033[0m'   # white
 Y = '\033[33m'  # yellow
 
-from json import loads
-import modules.subdom as parent
-from modules.write_log import log_writer
-
 
 async def shodan(hostname, conf_path, session):
-	with open(f'{conf_path}/keys.json', 'r') as keyfile:
-		json_read = keyfile.read()
+	sho_key = environ.get('FR_SHODAN_KEY')
 
-	json_load = loads(json_read)
-	sho_key = json_load['shodan']
+	if not sho_key:
+		log_writer('[shodan_subs] key missing in env')
+		with open(f'{conf_path}/keys.json', 'r') as keyfile:
+			json_read = keyfile.read()
+
+		json_load = loads(json_read)
+		try:
+			sho_key = json_load['shodan']
+		except KeyError:
+			log_writer('[shodan_subs] key missing in keys.json')
+			with open(f'{conf_path}/keys.json', 'w') as outfile:
+				json_load['shodan'] = None
+				sho_key = None
+				outfile.write(
+					dumps(json_load, sort_keys=True, indent=4)
+				)
 
 	if sho_key is not None:
 		print(f'{Y}[!] {C}Requesting {G}Shodan{W}')
