@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import aiohttp
 import asyncio
+import aiohttp
 from re import match
 from modules.export import export
 from modules.write_log import log_writer
