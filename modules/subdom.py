@@ -12,9 +12,11 @@ from modules.subdomain_modules.fb_subs import fb_cert
 from modules.subdomain_modules.virustotal_subs import virust
 from modules.subdomain_modules.shodan_subs import shodan
 from modules.subdomain_modules.certspot_subs import certspot
-from modules.subdomain_modules.wayback_subs import machine
+# from modules.subdomain_modules.wayback_subs import machine
 from modules.subdomain_modules.crtsh_subs import crtsh
 from modules.subdomain_modules.htarget_subs import hackertgt
+from modules.subdomain_modules.binedge_subs import binedge
+from modules.subdomain_modules.zoomeye_subs import zoomeye
 
 R = '\033[31m'  # red
 G = '\033[32m'  # green
@@ -36,9 +38,11 @@ async def query(hostname, tout, conf_path):
 			virust(hostname, conf_path, session),
 			shodan(hostname, conf_path, session),
 			certspot(hostname, session),
-			#machine(hostname, session),
+			# machine(hostname, session),
 			hackertgt(hostname, session),
-			crtsh(hostname, session)
+			crtsh(hostname, session),
+			binedge(hostname, conf_path, session),
+			zoomeye(hostname, conf_path, session)
 		)
 	await session.close()
 
