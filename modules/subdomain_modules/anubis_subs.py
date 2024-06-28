@@ -22,7 +22,11 @@ async def anubisdb(hostname, session):
 				json_out = loads(output)
 				parent.found.extend(json_out)
 				print(f'{G}[+] {Y}AnubisDB {W}found {C}{len(json_out)} {W}subdomains!')
+			elif status == 300:
+				print(f'{G}[+] {Y}AnubisDB {W}found {C}0 {W}subdomains!')
+				log_writer(f'[anubis_subs] Status = {status}, no subdomains found')
 			else:
+				print(await resp.text())
 				print(f'{R}[-] {C}AnubisDB Status : {W}{status}')
 				log_writer(f'[anubis_subs] Status = {status}, expected 200')
 	except Exception as exc:
