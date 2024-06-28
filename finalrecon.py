@@ -140,7 +140,7 @@ def banner():
 
 
 def save_key(key_string):
-	valid_keys = ['bevigil', 'facebook', 'shodan', 'virustotal']
+	valid_keys = ['bevigil', 'binedge', 'facebook', 'netlas', 'shodan', 'virustotal', 'zoomeye']
 	key_parts = key_string.split('@', 1)
 	key_name = key_parts[0]
 	key_str = key_parts[1]
