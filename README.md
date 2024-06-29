@@ -70,15 +70,7 @@ FinalRecon provides detailed information such as :
   * DMARC Records
 
 * Subdomain Enumeration
-  * Data Sources
-    * crt.sh
-    * AnubisDB
-    * ThreatMiner
-    * CertSpotter
-    * Facebook (API)
-    * VirusTotal (API)
-    * Shodan (API)
-    * BeVigil (API)
+  * Over 10 reliable data sources
 
 * Directory Enumeration
   * Support for File Extensions
@@ -101,19 +93,34 @@ FinalRecon provides detailed information such as :
 
 Some Modules Use API Keys to fetch data from different resources, these are optional, if you are not using an API key, they will be simply skipped.
 
+#### Environment Variables
+
+Keys are read from environment variables if they are set otherwise they are loaded from the config directory
+
+```bash
+FR_BEVIGIL_KEY, FR_BINEDGE_KEY, FR_FB_KEY, FR_HUNTER_KEY,
+FR_NETLAS_KEY, FR_SHODAN_KEY, FR_VT_KEY, FR_ZOOMEYE_KEY
+
+# Example :
+
+export FR_SHODAN_KEY="kl32lcdqwcdfv"
+```
+
+#### Saved Keys
+
 You can use **`-k`** to add the keys which will be saved in config directory automatically
 
 ```bash
 # Usage
 python3 finalrecon.py -k '<API NAME>@<API KEY>'
 
-Valid Keys : 'bevigil', 'facebook', 'shodan', 'virustotal'
+Valid Keys : 'bevigil', 'binedge', 'facebook', 'hunter', 'netlas','shodan', 'virustotal', 'zoomeye'
 
 # Example :
 python3 finalrecon.py -k 'shodan@kl32lcdqwcdfv'
 ```
 
-`Path --> $HOME/.config/finalrecon/keys.json`
+`Path = $HOME/.config/finalrecon/keys.json`
 
 | Source | Module | Link |
 |--------|--------|------|
@@ -121,6 +128,10 @@ python3 finalrecon.py -k 'shodan@kl32lcdqwcdfv'
 | VirusTotal | Sub Domain Enum | https://www.virustotal.com/gui/my-apikey |
 | Shodan | Sub Domain Enum | https://developer.shodan.io/api/requirements |
 | BeVigil | Sub Domain Enum | https://bevigil.com/osint-api |
+| BinaryEdge | Sub Domain Enum | https://app.binaryedge.io/ |
+| Netlas | Sub Domain Enum | https://docs.netlas.io/getting_started/ |
+| ZoomEye | Sub Domain Enum | https://www.zoomeye.hk/ |
+| Hunter | Sub Domain Enum | https://hunter.how/search-api |
 
 ### JSON Config File
 
@@ -246,27 +257,27 @@ Extra Options:
 ```bash
 # Check headers
 
-python3 finalrecon.py --headers <url>
+python3 finalrecon.py --headers --url https://example.com
 
 # Check ssl Certificate
 
-python3 finalrecon.py --sslinfo <url>
+python3 finalrecon.py --sslinfo --url https://example.com
 
 # Check whois Information
 
-python3 finalrecon.py --whois <url>
+python3 finalrecon.py --whois --url https://example.com
 
 # Crawl Target
 
-python3 finalrecon.py --crawl <url>
+python3 finalrecon.py --crawl --url https://example.com
 
 # Directory Searching
 
-python3 finalrecon.py --dir <url> -e txt,php -w /path/to/wordlist
+python3 finalrecon.py --dir --url https://example.com -e txt,php -w /path/to/wordlist
 
 # full scan
 
-python3 finalrecon.py --full <url>
+python3 finalrecon.py --full --url https://example.com
 ```
 
 ## Demo
