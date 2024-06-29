@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.1.7
+
+* Added option to hide banner
+* Added option to save API keys
+* Added option to specify custom export directory
+* Added option to read API keys from env directly
+* More sources added for subdomain enumeration :
+    * BinaryEdge
+    * Netlas
+    * Hunter.How
+    * ZoomEye
+    * UrlScan
+    * AlienVault
+* SSL info module optimized
+* Fixed TLDExtract issue with IP targets
+* Replaced dnslib with dnspython
+* Removed psycopg2
+
+---
+
 ## v1.1.6
 
 * dependencies reduced
