@@ -18,6 +18,7 @@ from modules.subdomain_modules.htarget_subs import hackertgt
 from modules.subdomain_modules.binedge_subs import binedge
 from modules.subdomain_modules.zoomeye_subs import zoomeye
 from modules.subdomain_modules.netlas_subs import netlas
+from modules.subdomain_modules.hunter_subs import hunter
 
 R = '\033[31m'  # red
 G = '\033[32m'  # green
@@ -44,7 +45,8 @@ async def query(hostname, tout, conf_path):
 			crtsh(hostname, session),
 			binedge(hostname, conf_path, session),
 			zoomeye(hostname, conf_path, session),
-			netlas(hostname, conf_path, session)
+			netlas(hostname, conf_path, session),
+			hunter(hostname, conf_path, session)
 		)
 	await session.close()
 
