@@ -231,8 +231,8 @@ try:
 			fname = f'{fpath}fr_{hostname}_{dt_now}.{output}'
 			respath = f'{fpath}fr_{hostname}_{dt_now}'
 		else:
-			fname = f'{folder_name}.{output}'
-			respath = f'{folder_name}'
+			fname = f'{fpath}{folder_name}.{output}'
+			respath = f'{fpath}{folder_name}'
 		if not os.path.exists(respath):
 			os.makedirs(respath)
 		out_settings = {
