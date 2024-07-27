@@ -57,6 +57,7 @@ ext_help.add_argument('-d', help='Custom DNS Servers [ Default : 1.1.1.1 ]')
 ext_help.add_argument('-e', help='File Extensions [ Example : txt, xml, php ]')
 ext_help.add_argument('-o', help='Export Format [ Default : txt ]')
 ext_help.add_argument('-cd', help='Change export directory [ Default : ~/.local/share/finalrecon ]')
+ext_help.add_argument('-of', help='Change export folder name [ Default :<path>fr_<hostname>_<date> ]')
 ext_help.add_argument('-k', help='Add API key [ Example : shodan@key ]')
 ext_help.set_defaults(
 	dt=config.dir_enum_th,
@@ -69,7 +70,8 @@ ext_help.set_defaults(
 	d=config.custom_dns,
 	e=config.dir_enum_ext,
 	o=config.export_fmt,
-	cd=config.usr_data
+	cd=config.usr_data,
+	of = None,
 )
 
 try:
@@ -103,6 +105,7 @@ output = args.o
 show_banner = args.nb
 add_key = args.k
 output_dir = args.cd
+folder_name = args.of
 
 import socket
 import datetime
@@ -223,9 +226,13 @@ try:
 
 	if output != 'None':
 		fpath = output_dir
-		dt_now = str(datetime.datetime.now().strftime('%d-%m-%Y_%H:%M:%S'))
-		fname = f'{fpath}fr_{hostname}_{dt_now}.{output}'
-		respath = f'{fpath}fr_{hostname}_{dt_now}'
+		if not folder_name:
+			dt_now = str(datetime.datetime.now().strftime('%d-%m-%Y_%H:%M:%S'))
+			fname = f'{fpath}fr_{hostname}_{dt_now}.{output}'
+			respath = f'{fpath}fr_{hostname}_{dt_now}'
+		else:
+			fname = f'{folder_name}.{output}'
+			respath = f'{folder_name}'
 		if not os.path.exists(respath):
 			os.makedirs(respath)
 		out_settings = {
