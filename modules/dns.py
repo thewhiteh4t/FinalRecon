@@ -63,6 +63,12 @@ def dnsrec(domain, dns_servers, output, data):
 			print(f'{C}DMARC \t: {W}{entry.to_text()}')
 			if output != 'None':
 				result.setdefault('dmarc', []).append(f'DMARC : {entry.to_text()}')
+	except dns.resolver.NoAnswer as exc:
+		log_writer(f'[dns.dmarc] Exception = {exc}')
+	except dns.resolver.NoMetaqueries as exc:
+		log_writer(f'[dns.dmarc] Exception = {exc}')
+	except dns.resolver.NoNameservers as exc:
+		log_writer(f'[dns.dmarc] Exception = {exc}')
 	except dns.resolver.NXDOMAIN as exc:
 		log_writer(f'[dns.dmarc] Exception = {exc}')
 		print(f'\n{R}[-] {C}DMARC Record Not Found!{W}')
