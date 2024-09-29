@@ -12,12 +12,16 @@ Y = '\033[33m'  # yellow
 
 counter = 0
 port_list = {
-	
+
+    1: "tcpmux",
+    9: "Discard",
+    15: "netstat",
     20: "FTP-CLI",
     21: "FTP",
     22: "SSH",
     23: "Telnet",
     25: "SMTP",
+    26: "rsftp",
     53: "DNS",
     67: "DHCP (Server)",
     68: "DHCP (Client)",
@@ -41,6 +45,7 @@ port_list = {
     465: "SMTPS",
     515: "LPD",
     520: "RIP",
+    554: "RTSP (Real-Time Streaming)",
     587: "SMTP (Submission)",
     631: "IPP (CUPS)",
     636: "LDAPS",
@@ -57,7 +62,9 @@ port_list = {
     1701: "L2TP",
     1723: "PPTP",
     1883: "MQTT",
+    2000: "Cisco-sccp",
     2049: "NFS",
+    2222: "EtherNetIP-1",
     2375: "Docker REST API",
     2376: "Docker REST API (TLS)",
     2483: "Oracle DB",
@@ -66,6 +73,7 @@ port_list = {
     3306: "MySQL",
     3389: "RDP",
     3690: "Subversion",
+    4373: "Remote Authenticated Command",
     4443: "HTTPS-Alt",
     4444: "Metasploit",
     4567: "MySQL Group Replication",
@@ -74,6 +82,7 @@ port_list = {
     5432: "PostgreSQL",
     5672: "RabbitMQ",
     5900: "VNC",
+    5938: "TeamViewer",
     5984: "CouchDB",
     6379: "Redis",
     6443: "Kubernetes API",
@@ -115,9 +124,9 @@ port_list = {
     50030: "Hadoop",
     50070: "Hadoop",
     5555: "Open Remote",
-    61616: "ActiveMQ",   
+    61616: "ActiveMQ",
+    
 }
-
 async def insert(queue):
 	for port in port_list:
 		await queue.put(port)
