@@ -24,7 +24,9 @@ def dnsrec(domain, dns_servers, output, data):
 	full_ans = []
 
 	res = dns.asyncresolver.Resolver(configure=False)
-	res.nameservers = dns_servers
+	res.nameservers = [sv.strip() for sv in dns_servers.split(',')]
+	print(res.nameservers)
+
 
 
 	async def fetch_records(res, domain, record):
