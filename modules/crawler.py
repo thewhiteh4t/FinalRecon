@@ -19,20 +19,19 @@ Y = '\033[33m'  # yellow
 
 user_agent = {'User-Agent': 'FinalRecon'}
 
-total = []
-r_total = []
-sm_total = []
-js_total = []
-css_total = []
-int_total = []
-ext_total = []
-img_total = []
-js_crawl_total = []
-sm_crawl_total = []
-
 
 def crawler(target, protocol, netloc, output, data):
-	global r_url, sm_url
+	r_total = []
+	sm_total = []
+	css_total = []
+	js_total = []
+	int_total = []
+	ext_total = []
+	img_total = []
+	sm_crawl_total = []
+	js_crawl_total = []
+	total = []
+
 	print(f'\n{Y}[!] Starting Crawler...{W}\n')
 
 	try:
@@ -46,26 +45,27 @@ def crawler(target, protocol, netloc, output, data):
 	if status == 200:
 		page = rqst.content
 		soup = bs4.BeautifulSoup(page, 'lxml')
-
 		r_url = f'{protocol}://{netloc}/robots.txt'
 		sm_url = f'{protocol}://{netloc}/sitemap.xml'
 		base_url = f'{protocol}://{netloc}'
-
 		loop = asyncio.new_event_loop()
 		asyncio.set_event_loop(loop)
 		tasks = asyncio.gather(
-			robots(r_url, base_url, data, output),
-			sitemap(sm_url, data, output),
-			css(target, data, soup, output),
-			js_scan(target, data, soup, output),
-			internal_links(target, data, soup, output),
-			external_links(target, data, soup, output),
-			images(target, data, soup, output),
-			sm_crawl(data, output),
-			js_crawl(data, output))
+			robots(r_url, r_total, sm_total, base_url, data, output),
+			sitemap(sm_url, sm_total, data, output),
+			css(target, css_total, data, soup, output),
+			js_scan(target, js_total, data, soup, output),
+			internal_links(target, int_total, data, soup, output),
+			external_links(target, ext_total, data, soup, output),
+			images(target, img_total, data, soup, output),
+			sm_crawl(data, sm_crawl_total, sm_total, sm_url, output),
+			js_crawl(data, js_crawl_total, js_total, output))
 		loop.run_until_complete(tasks)
 		loop.close()
-		stats(output, data, soup)
+		stats(output, r_total, sm_total, css_total, js_total, 
+			int_total, ext_total, img_total, sm_crawl_total,
+			js_crawl_total, total, data, soup
+		)
 		log_writer('[crawler] Completed')
 	else:
 		print(f'{R}[-] {C}Status : {W}{status}')
@@ -102,8 +102,7 @@ def url_filter(target, link):
 	return link
 
 
-async def robots(robo_url, base_url, data, output):
-	global r_total
+async def robots(robo_url, r_total, sm_total, base_url, data, output):
 	print(f'{G}[+] {C}Looking for robots.txt{W}', end='', flush=True)
 
 	try:
@@ -144,8 +143,7 @@ async def robots(robo_url, base_url, data, output):
 		log_writer(f'[crawler.robots] Exception = {exc}')
 
 
-async def sitemap(target_url, data, output):
-	global sm_total
+async def sitemap(target_url, sm_total, data, output):
 	print(f'{G}[+] {C}Looking for sitemap.xml{W}', end='', flush=True)
 	try:
 		sm_rqst = requests.get(target_url, headers=user_agent, verify=False, timeout=10)
@@ -173,8 +171,7 @@ async def sitemap(target_url, data, output):
 		log_writer(f'[crawler.sitemap] Exception = {exc}')
 
 
-async def css(target, data, soup, output):
-	global css_total
+async def css(target, css_total, data, soup, output):
 	print(f'{G}[+] {C}Extracting CSS Links{W}', end='', flush=True)
 	css_links = soup.find_all('link', href=True)
 
@@ -188,8 +185,7 @@ async def css(target, data, soup, output):
 	exporter(data, output, css_total, 'css')
 
 
-async def js_scan(target, data, soup, output):
-	global js_total
+async def js_scan(target, js_total, data, soup, output):
 	print(f'{G}[+] {C}Extracting Javascript Links{W}', end='', flush=True)
 	scr_tags = soup.find_all('script', src=True)
 
@@ -205,8 +201,7 @@ async def js_scan(target, data, soup, output):
 	exporter(data, output, js_total, 'javascripts')
 
 
-async def internal_links(target, data, soup, output):
-	global int_total
+async def internal_links(target, int_total, data, soup, output):
 	print(f'{G}[+] {C}Extracting Internal Links{W}', end='', flush=True)
 
 	ext = tldextract.extract(target)
@@ -224,8 +219,7 @@ async def internal_links(target, data, soup, output):
 	exporter(data, output, int_total, 'internal_urls')
 
 
-async def external_links(target, data, soup, output):
-	global ext_total
+async def external_links(target, ext_total, data, soup, output):
 	print(f'{G}[+] {C}Extracting External Links{W}', end='', flush=True)
 
 	ext = tldextract.extract(target)
@@ -243,8 +237,7 @@ async def external_links(target, data, soup, output):
 	exporter(data, output, ext_total, 'external_urls')
 
 
-async def images(target, data, soup, output):
-	global img_total
+async def images(target, img_total, data, soup, output):
 	print(f'{G}[+] {C}Extracting Images{W}', end='', flush=True)
 	image_tags = soup.find_all('img')
 
@@ -258,8 +251,7 @@ async def images(target, data, soup, output):
 	exporter(data, output, img_total, 'images')
 
 
-async def sm_crawl(data, output):
-	global sm_crawl_total
+async def sm_crawl(data, sm_crawl_total, sm_total, sm_url, output):
 	print(f'{G}[+] {C}Crawling Sitemaps{W}', end='', flush=True)
 
 	threads = []
@@ -302,8 +294,7 @@ async def sm_crawl(data, output):
 	exporter(data, output, sm_crawl_total, 'urls_inside_sitemap')
 
 
-async def js_crawl(data, output):
-	global js_crawl_total
+async def js_crawl(data, js_crawl_total, js_total, output):
 	print(f'{G}[+] {C}Crawling Javascripts{W}', end='', flush=True)
 
 	threads = []
@@ -347,9 +338,7 @@ def exporter(data, output, list_name, file_name):
 	export(output, data)
 
 
-def stats(output, data, soup):
-	global total
-
+def stats(output, r_total, sm_total, css_total, js_total, int_total, ext_total, img_total, sm_crawl_total, js_crawl_total, total, data, soup):
 	total.extend(r_total)
 	total.extend(sm_total)
 	total.extend(css_total)
