@@ -203,7 +203,7 @@ try:
 			domain = ''
 			domain_suffix = ''
 		else:
-			netloc = parsed_url.registered_domain                   # abc.com
+			netloc = parsed_url.fqdn                                # abc.com
 			domain = parsed_url.domain
 			domain_suffix = parsed_url.suffix
 		hostname = netloc
