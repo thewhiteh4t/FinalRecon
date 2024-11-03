@@ -25,7 +25,6 @@ def dnsrec(domain, dns_servers, output, data):
 
 	res = dns.asyncresolver.Resolver(configure=False)
 	res.nameservers = [sv.strip() for sv in dns_servers.split(',')]
-	print(res.nameservers)
 
 
 

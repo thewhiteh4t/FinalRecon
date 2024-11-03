@@ -27,7 +27,7 @@ while True:
 
 	try:
 		timeout = config_json['common']['timeout']
-		custom_dns = config_json['common']['dns_servers'].split(', ')
+		custom_dns = config_json['common']['dns_servers']
 		ssl_port = config_json['ssl_cert']['ssl_port']
 		port_scan_th = config_json['port_scan']['threads']
 		dir_enum_th = config_json['dir_enum']['threads']
