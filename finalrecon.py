@@ -256,7 +256,11 @@ try:
 		from modules.whois import whois_lookup
 
 		headers(target, out_settings, data)
-		cert(hostname, sslp, out_settings, data)
+		if protocol == 'https':
+			cert(hostname, sslp, out_settings, data)
+		else:	
+			print(f'{R}[!] {C}Skipping SSL info: Target is not HTTPS{W}')
+			log_writer('Skipping SSL info: Target is not HTTPS')
 		whois_lookup(domain, domain_suffix, path_to_script, out_settings, data)
 		dnsrec(hostname, dserv, out_settings, data)
 		if not type_ip and not private_ip:
@@ -272,9 +276,13 @@ try:
 		headers(target, out_settings, data)
 
 	if sslinfo:
-		from modules.sslinfo import cert
-		log_writer('Starting SSL enum...')
-		cert(hostname, sslp, out_settings, data)
+		if protocol == 'https':
+			from modules.sslinfo import cert
+			log_writer('Starting SSL enum...')
+			cert(hostname, sslp, out_settings, data)
+		else:
+			print(f'{R}[!] {C}Skipping SSL info: Target is not HTTPS{W}')
+			log_writer('SSL info requested but target is not HTTPS')
 
 	if whois:
 		from modules.whois import whois_lookup
