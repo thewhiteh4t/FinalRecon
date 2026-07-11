@@ -1,0 +1,21 @@
+{
+    "common": {
+        "timeout": 30,
+        "dns_servers": "8.8.8.8, 8.8.4.4, 1.1.1.1, 1.0.0.1"
+    },
+    "ssl_cert": {
+        "ssl_port": 443
+    },
+    "port_scan": {
+        "threads": 50
+    },
+    "dir_enum": {
+        "threads": 50,
+        "redirect": false,
+        "verify_ssl": false,
+        "extension": ""
+    },
+    "export": {
+        "format": "txt"
+    }
+}
