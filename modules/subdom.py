@@ -18,6 +18,7 @@ from modules.subdomain_modules.htarget_subs import hackertgt
 from modules.subdomain_modules.hunter_subs import hunter
 from modules.subdomain_modules.leakix_subs import leakix
 from modules.subdomain_modules.netlas_subs import netlas
+from modules.subdomain_modules.scanmalware_subs import scanmalware
 from modules.subdomain_modules.shodan_subs import shodan
 from modules.subdomain_modules.urlscan_subs import urlscan
 from modules.subdomain_modules.virustotal_subs import virust
@@ -81,6 +82,7 @@ async def query(hostname, tout, api_keys):
             hunter(hostname, api_keys["hunter"], session),
             netlas(hostname, api_keys["netlas"], session),
             shodan(hostname, api_keys["shodan"], session),
+            scanmalware(hostname, session),
             urlscan(hostname, session),
             virust(hostname, api_keys["virustotal"], session),
             zoomeye(hostname, api_keys["zoomeye"], session),
