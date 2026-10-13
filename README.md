@@ -205,6 +205,17 @@ cd FinalRecon
 pip3 install -r requirements.txt
 ```
 
+### OTinstaller
+
+[OTinstaller](https://github.com/OSINTVerseHQ/OTinstaller) is a third-party tool manager that installs FinalRecon from this repository into its own virtualenv. It isn't maintained by the FinalRecon authors, so please report problems with it [on the OTinstaller tracker](https://github.com/OSINTVerseHQ/OTinstaller/issues).
+
+```bash
+pipx install otinstaller
+otinstaller init
+otinstaller install finalrecon
+otinstaller run finalrecon -- url:https://example.com --headers   # url: is passed as --url
+```
+
 ### Docker
 
 ```bash
