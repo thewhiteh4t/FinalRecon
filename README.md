@@ -211,6 +211,7 @@ pip3 install -r requirements.txt
 
 ```bash
 pipx install otinstaller
+otinstaller init
 otinstaller install finalrecon
 otinstaller run finalrecon -- url:https://example.com --headers   # url: is passed as --url
 ```
