@@ -229,7 +229,7 @@ And then use `finalrecon` to start your scan.
 ## Usage
 
 ```bash
-FinalRecon - All in One Web Recon | v1.1.6
+FinalRecon - All in One Web Recon | v1.1.8
 
 options:
   -h, --help  show this help message and exit
@@ -250,16 +250,15 @@ Extra Options:
   -dt DT      Number of threads for directory enum [ Default : 30 ]
   -pt PT      Number of threads for port scan [ Default : 50 ]
   -T T        Request Timeout [ Default : 30.0 ]
-  -w W        Path to Wordlist [ Default : wordlists/dirb_common.txt
-              ]
+  -w W        Path to Wordlist [ Default : wordlists/dirb_common.txt ]
   -r          Allow Redirect [ Default : False ]
   -s          Toggle SSL Verification [ Default : True ]
   -sp SP      Specify SSL Port [ Default : 443 ]
   -d D        Custom DNS Servers [ Default : 1.1.1.1 ]
   -e E        File Extensions [ Example : txt, xml, php ]
   -o O        Export Format [ Default : txt ]
-  -cd CD      Change export directory [ Default :
-              ~/.local/share/finalrecon ]
+  -cd CD      Change export directory [ Default : ~/.local/share/finalrecon ]
+  -of OF      Change export folder name [ Default :<path>fr_<hostname>_<date> ]
   -k K        Add API key [ Example : shodan@key ]
 ```
 
