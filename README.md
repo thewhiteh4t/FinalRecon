@@ -90,6 +90,9 @@ FinalRecon provides detailed information such as :
 - Port Scan
   - Fast
   - Top 1000 Ports
+- DarkEye Exposure Lookup
+  - Optional, needs a HaveIBeenRansom key, a Breach House key, or both
+  - Shows product, category, title and discovery date for each listing
 - Export
   - Formats
     - txt
@@ -107,7 +110,8 @@ Keys are read from environment variables if they are set otherwise they are load
 ```bash
 FR_BEVIGIL_KEY, FR_HUNTER_KEY, FR_NETLAS_KEY,
 FR_SHODAN_KEY, FR_VT_KEY, FR_ZOOMEYE_KEY,
-FR_CHAOS_KEY, FR_GITHUB_KEY, FR_LEAKIX_KEY
+FR_CHAOS_KEY, FR_GITHUB_KEY, FR_LEAKIX_KEY,
+FR_HAVEIBEENRANSOM_KEY, FR_BREACHHOUSE_KEY
 
 # Example :
 
@@ -122,7 +126,7 @@ You can use **`-k`** to add the keys which will be saved in config directory aut
 # Usage
 python3 finalrecon.py -k '<API NAME>@<API KEY>'
 
-Valid Keys : 'bevigil', 'chaos', 'github', 'hunter', 'leakix', 'netlas', 'shodan', 'virustotal', 'zoomeye'
+Valid Keys : 'bevigil', 'breachhouse', 'chaos', 'github', 'haveibeenransom', 'hunter', 'leakix', 'netlas', 'shodan', 'virustotal', 'zoomeye'
 
 # Example :
 python3 finalrecon.py -k 'shodan@kl32lcdqwcdfv'
@@ -141,6 +145,10 @@ python3 finalrecon.py -k 'shodan@kl32lcdqwcdfv'
 | Netlas     | Sub Domain Enum | https://docs.netlas.io/getting_started/      |
 | ZoomEye    | Sub Domain Enum | https://www.zoomeye.ai/                      |
 | Hunter     | Sub Domain Enum | https://hunter.how/search-api                |
+| HaveIBeenRansom | DarkEye Exposure Lookup | https://haveibeenransom.com/howapi |
+| Breach House | DarkEye Exposure Lookup | https://breach.house/docs |
+
+`--darkeye` sends the target's registered domain to HaveIBeenRansom and Breach House. Only the services that have a key are queried, and the lookup is skipped when no key is set. `--full` runs it under the same rule. A listing needs verification and does not by itself show a compromise, and a domain with no listing is not shown to be unexposed.
 
 ### JSON Config File
 
@@ -243,6 +251,7 @@ options:
   --dir       Directory Search
   --wayback   Wayback URLs
   --ps        Fast Port Scan
+  --darkeye   DarkEye Exposure Lookup
   --full      Full Recon
 
 Extra Options:
@@ -282,6 +291,10 @@ python3 finalrecon.py --crawl --url https://example.com
 # Directory Searching
 
 python3 finalrecon.py --dir --url https://example.com -e txt,php -w /path/to/wordlist
+
+# DarkEye exposure lookup (needs a HaveIBeenRansom or Breach House key)
+
+python3 finalrecon.py --darkeye --url https://example.com
 
 # full scan
 
