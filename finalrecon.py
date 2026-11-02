@@ -7,6 +7,7 @@ R = "\033[31m"  # red
 G = "\033[32m"  # green
 C = "\033[36m"  # cyan
 W = "\033[0m"  # white
+Y = "\033[33m"  # yellow
 
 from modules.write_log import log_writer
 
@@ -47,6 +48,7 @@ parser.add_argument("--sub", help="Sub-Domain Enumeration", action="store_true")
 parser.add_argument("--dir", help="Directory Search", action="store_true")
 parser.add_argument("--wayback", help="Wayback URLs", action="store_true")
 parser.add_argument("--ps", help="Fast Port Scan", action="store_true")
+parser.add_argument("--darkeye", help="DarkEye Exposure Lookup", action="store_true")
 parser.add_argument("--full", help="Full Recon", action="store_true")
 
 ext_help = parser.add_argument_group("Extra Options")
@@ -109,6 +111,7 @@ dns = args.dns
 dirrec = args.dir
 wback = args.wayback
 pscan = args.ps
+darkeye = args.darkeye
 full = args.full
 threads = args.dt
 pscan_threads = args.pt
@@ -174,6 +177,8 @@ def save_key(key_string):
         "chaos",
         "leakix",
         "github",
+        "haveibeenransom",
+        "breachhouse",
     ]
     key_parts = key_string.split("@", 1)
     key_name = key_parts[0]
@@ -288,6 +293,10 @@ try:
             whois_lookup(domain, domain_suffix, path_to_script, out_settings, data)
             subdomains(apex_domain, tout, out_settings, data, conf_path)
             timetravel(target, data, out_settings)
+
+            from modules.darkeye import darkeye_lookup
+
+            darkeye_lookup(apex_domain, tout, out_settings, data, conf_path)
         scan(ip, out_settings, data, pscan_threads)
         crawler(target, protocol, netloc, out_settings, data)
         hammer(target, threads, tout, wdlist, redir, sslv, out_settings, data, filext)
@@ -339,6 +348,19 @@ try:
         log_writer("Starting wayback enum...")
         timetravel(hostname, data, out_settings)
 
+    if darkeye and not full and not type_ip and not private_ip:
+        from modules.darkeye import darkeye_lookup
+
+        log_writer("Starting DarkEye lookup...")
+        darkeye_lookup(apex_domain, tout, out_settings, data, conf_path)
+
+    elif darkeye and not full:
+        print(
+            f"{Y}[!]{W} DarkEye Lookup is Not Supported for IP Addresses "
+            "or Private Hosts\n"
+        )
+        log_writer("DarkEye Lookup skipped, IP address or private host")
+
     if pscan:
         from modules.portscan import scan
 
@@ -352,7 +374,19 @@ try:
         hammer(target, threads, tout, wdlist, redir, sslv, out_settings, data, filext)
 
     if not any(
-        [full, headinfo, sslinfo, whois, crawl, dns, subd, wback, pscan, dirrec]
+        [
+            full,
+            headinfo,
+            sslinfo,
+            whois,
+            crawl,
+            dns,
+            subd,
+            wback,
+            pscan,
+            dirrec,
+            darkeye,
+        ]
     ):
         print(f"\n{R}[-]{W} Error : At least One Argument is Required with URL")
         log_writer("At least One Argument is Required with URL, exiting")
