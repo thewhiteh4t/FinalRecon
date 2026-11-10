@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import asyncio
+import contextlib
+from contextlib import asynccontextmanager
 
 from modules.export import export
 from modules.write_log import log_writer
@@ -128,6 +130,23 @@ port_list = {
 }
 
 
+@asynccontextmanager
+async def open_stream(ip_addr, port, timeout=1):
+    """Open a TCP connection and guarantee the writer (socket) is closed on exit,
+    even when the caller raises or is cancelled — no lingering/zombie sockets."""
+    writer = None
+    try:
+        reader, writer = await asyncio.wait_for(
+            asyncio.open_connection(ip_addr, port), timeout=timeout
+        )
+        yield reader, writer
+    finally:
+        if writer is not None and not writer.is_closing():
+            writer.close()
+            with contextlib.suppress(Exception):
+                await writer.wait_closed()
+
+
 async def insert(queue):
     for port in port_list:
         await queue.put(port)
@@ -136,15 +155,26 @@ async def insert(queue):
 async def consumer(queue, ip_addr, result):
     global counter
     while True:
+        item_acquired = False
         port = await queue.get()
-        await sock_conn(ip_addr, port, result)
-        queue.task_done()
-        counter += 1
-        print(
-            f"{Y}[!]{W} Scanning : {counter}/{len(port_list)}",
-            end="\r",
-            flush=True,
-        )
+        item_acquired = True
+        try:
+            await sock_conn(ip_addr, port, result)
+            counter += 1
+            print(
+                f"{Y}[!]{W} Scanning : {counter}/{len(port_list)}",
+                end="\r",
+                flush=True,
+            )
+        except asyncio.CancelledError:
+            # Re-raise: a cancel after queue.join() means we never dequeued an item
+            # (or already accounted for it), so task_done() below must not double-count.
+            raise
+        except Exception as exc:
+            log_writer(f"[portscan.consumer] Exception = {exc}")
+        finally:
+            if item_acquired:
+                queue.task_done()
 
 
 async def run(ip_addr, result, threads):
@@ -154,10 +184,14 @@ async def run(ip_addr, result, threads):
         asyncio.create_task(consumer(queue, ip_addr, result)) for _ in range(threads)
     ]
 
-    await asyncio.gather(distrib)
-    await queue.join()
-    for worker in workers:
-        worker.cancel()
+    try:
+        await asyncio.gather(distrib)
+        await queue.join()
+    finally:
+        # Always cancel and await workers so in-flight connections are terminated.
+        for worker in workers:
+            worker.cancel()
+        await asyncio.gather(*workers, return_exceptions=True)
 
 
 def scan(ip_addr, output, data, threads):
@@ -166,12 +200,12 @@ def scan(ip_addr, output, data, threads):
     print(f"\n{HEADER}━━━ Port Scan {'━' * 30}{W}\n")
     print(f"{C}[*]{W} Scanning Top {G}100+{W} Ports With {G}{threads}{W} Threads...\n")
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(run(ip_addr, result, threads))
-    loop.close()
-
-    print()
+    # asyncio.run() owns the loop lifecycle; the open_stream context manager closes
+    # every writer, and run() awaits worker cancellation, so no socket is leaked.
+    try:
+        asyncio.run(run(ip_addr, result, threads))
+    finally:
+        print()
 
     if output != "None":
         ps_output(output, data, result)
@@ -180,16 +214,16 @@ def scan(ip_addr, output, data, threads):
 
 async def sock_conn(ip_addr, port, result):
     try:
-        connector = asyncio.open_connection(ip_addr, port)
-        await asyncio.wait_for(connector, 1)
-        port_name = port_list[port]
-        print(f"\r\033[K{G}[+]{W} {str(port).ljust(6)} {port_name}")
-        result["ports"].append(f"{port} ({port_name})")
-        return True
-    except TimeoutError:
+        async with open_stream(ip_addr, port) as (reader, writer):
+            port_name = port_list[port]
+            print(f"\r\033[K{G}[+]{W} {str(port).ljust(6)} {port_name}")
+            result["ports"].append(f"{port} ({port_name})")
+            return True
+    except (TimeoutError, asyncio.TimeoutError, OSError):
         return False
-    except Exception:
-        pass
+    except Exception as exc:
+        log_writer(f"[portscan.sock_conn] Exception = {exc}")
+        return False
 
 
 def ps_output(output, data, result):

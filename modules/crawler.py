@@ -2,16 +2,15 @@
 
 import asyncio
 import re
-import threading
+from contextlib import asynccontextmanager
 
+import aiohttp
 import bs4
-import requests
 import tldextract
 
 from modules.export import export
 from modules.write_log import log_writer
 
-requests.packages.urllib3.disable_warnings()
 import settings as config
 
 R = "\033[31m"  # red
@@ -22,6 +21,40 @@ Y = "\033[33m"  # yellow
 HEADER = "\033[1;35m"  # bold magenta
 
 user_agent = {"User-Agent": f"FinalRecon/{config.version}"}
+
+# Bound outbound concurrency. Replaces the previous design that created/borrowed a
+# fresh worker thread for *every* request via asyncio.to_thread + ThreadPoolExecutor,
+# which is what made this module "async in name only" with high per-request overhead.
+CONN_LIMIT = 32
+_request_gate = asyncio.Semaphore(CONN_LIMIT)
+
+
+async def _fetch(session, url):
+    """Bounded, error-tolerant GET. Returns a ClientResponse, or None on failure."""
+    async with _request_gate:
+        try:
+            return await session.get(url, allow_redirects=True)
+        except aiohttp.ClientError as exc:
+            log_writer(f"[crawler] GET failed {url} : {exc}")
+            return None
+
+
+@asynccontextmanager
+async def _open(session, url):
+    """Acquire a response and guarantee its release via `async with`."""
+    resp = await _fetch(session, url)
+    if resp is None:
+        yield None
+        return
+    try:
+        yield resp
+    finally:
+        resp.release()
+
+
+async def _compute(fn, *args):
+    """Run a CPU-bound parse step cooperatively without spinning up a thread."""
+    fn(*args)
 
 
 def crawler(target, protocol, netloc, output, data):
@@ -38,35 +71,32 @@ def crawler(target, protocol, netloc, output, data):
 
     print(f"\n{HEADER}━━━ Crawler {'━' * 30}{W}\n")
 
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    soup = None
     try:
-        rqst = requests.get(target, headers=user_agent, verify=False, timeout=10)
-    except Exception as exc:
-        print(f"{R}[-]{W} Exception : {exc}")
-        log_writer(f"[crawler] Exception = {exc}")
-        return
-
-    status = rqst.status_code
-    if status == 200:
-        page = rqst.content
-        soup = bs4.BeautifulSoup(page, "lxml")
-        r_url = f"{protocol}://{netloc}/robots.txt"
-        sm_url = f"{protocol}://{netloc}/sitemap.xml"
-        base_url = f"{protocol}://{netloc}"
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        tasks = asyncio.gather(
-            robots(r_url, r_total, sm_total, base_url, data, output),
-            sitemap(sm_url, sm_total, data, output),
-            css(target, css_total, data, soup, output),
-            js_scan(target, js_total, data, soup, output),
-            internal_links(target, int_total, data, soup, output),
-            external_links(target, ext_total, data, soup, output),
-            images(target, img_total, data, soup, output),
-            sm_crawl(data, sm_crawl_total, sm_total, sm_url, output),
-            js_crawl(data, js_crawl_total, js_total, output),
+        soup = loop.run_until_complete(
+            _crawl(
+                target,
+                protocol,
+                netloc,
+                output,
+                data,
+                r_total,
+                sm_total,
+                css_total,
+                js_total,
+                int_total,
+                ext_total,
+                img_total,
+                sm_crawl_total,
+                js_crawl_total,
+            )
         )
-        loop.run_until_complete(tasks)
+    finally:
         loop.close()
+
+    if soup is not None:
         stats(
             output,
             r_total,
@@ -83,9 +113,68 @@ def crawler(target, protocol, netloc, output, data):
             soup,
         )
         log_writer("[crawler] Completed")
-    else:
-        print(f"{R}[-]{W} Status : {status}")
-        log_writer(f"[crawler] Status code = {status}, expected 200")
+
+
+async def _crawl(
+    target,
+    protocol,
+    netloc,
+    output,
+    data,
+    r_total,
+    sm_total,
+    css_total,
+    js_total,
+    int_total,
+    ext_total,
+    img_total,
+    sm_crawl_total,
+    js_crawl_total,
+):
+    base_url = f"{protocol}://{netloc}"
+    r_url = f"{base_url}/robots.txt"
+    sm_url = f"{base_url}/sitemap.xml"
+
+    timeout = aiohttp.ClientTimeout(total=10)
+    connector = aiohttp.TCPConnector(
+        limit=CONN_LIMIT, ssl=False, enable_cleanup_closed=True
+    )
+    async with aiohttp.ClientSession(
+        headers=user_agent, connector=connector, timeout=timeout
+    ) as session:
+        try:
+            async with _open(session, target) as rqst:
+                if rqst is None:
+                    return None
+                status = rqst.status
+                page = await rqst.read()
+        except aiohttp.ClientError as exc:
+            print(f"{R}[-]{W} Exception : {exc}")
+            log_writer(f"[crawler] Exception = {exc}")
+            return None
+
+        if status != 200:
+            print(f"{R}[-]{W} Status : {status}")
+            log_writer(f"[crawler] Status code = {status}, expected 200")
+            return None
+
+        soup = bs4.BeautifulSoup(page, "lxml")
+
+        # True async I/O (network) runs concurrently on the shared session; the pure
+        # CPU parses are dispatched with _compute so no worker thread is created.
+        await asyncio.gather(
+            robots(session, r_url, r_total, sm_total, base_url, data, output),
+            sitemap(session, sm_url, sm_total, data, output),
+            _compute(css, target, css_total, data, soup, output),
+            _compute(js_scan, target, js_total, data, soup, output),
+            _compute(internal_links, target, int_total, data, soup, output),
+            _compute(external_links, target, ext_total, data, soup, output),
+            _compute(images, target, img_total, data, soup, output),
+            sm_crawl(session, data, sm_crawl_total, sm_total, sm_url, output),
+            js_crawl(session, data, js_crawl_total, js_total, output),
+        )
+
+    return soup
 
 
 def url_filter(target, link):
@@ -117,16 +206,18 @@ def url_filter(target, link):
     return link
 
 
-async def robots(robo_url, r_total, sm_total, base_url, data, output):
+async def robots(session, robo_url, r_total, sm_total, base_url, data, output):
     print(f"{C}[*]{W} Looking for robots.txt", end="", flush=True)
 
-    try:
-        r_rqst = requests.get(robo_url, headers=user_agent, verify=False, timeout=10)
-        r_sc = r_rqst.status_code
+    async with _open(session, robo_url) as r_rqst:
+        if r_rqst is None:
+            print(f"{R}{'['.rjust(9, '.')} Error ]{W}")
+            return
+        r_sc = r_rqst.status
         if r_sc == 200:
             print(f"{G}{'['.rjust(9, '.')} Found ]{W}")
             print(f"{C}[*]{W} Extracting robots Links", end="", flush=True)
-            r_page = r_rqst.text
+            r_page = await r_rqst.text()
             r_scrape = r_page.split("\n")
             for entry in r_scrape:
                 if any(
@@ -145,7 +236,7 @@ async def robots(robo_url, r_total, sm_total, base_url, data, output):
                     if url.endswith("xml"):
                         sm_total.append(url)
 
-            r_total = set(r_total)
+            r_total[:] = list(set(r_total))
             print(f"{G}{'['.rjust(8, '.')} {len(r_total)} ]")
             exporter(data, output, r_total, "robots")
 
@@ -155,20 +246,18 @@ async def robots(robo_url, r_total, sm_total, base_url, data, output):
         else:
             print(f"{R}{'['.rjust(9, '.')} {r_sc} ]{W}")
 
-    except Exception as exc:
-        print(f"\n{R}[-]{W} Exception : {exc}")
-        log_writer(f"[crawler.robots] Exception = {exc}")
 
-
-async def sitemap(target_url, sm_total, data, output):
+async def sitemap(session, target_url, sm_total, data, output):
     print(f"{C}[*]{W} Looking for sitemap.xml", end="", flush=True)
-    try:
-        sm_rqst = requests.get(target_url, headers=user_agent, verify=False, timeout=10)
-        sm_sc = sm_rqst.status_code
+    async with _open(session, target_url) as sm_rqst:
+        if sm_rqst is None:
+            print(f"{R}{'['.rjust(8, '.')} Error ]{W}")
+            return
+        sm_sc = sm_rqst.status
         if sm_sc == 200:
             print(f"{G}{'['.rjust(8, '.')} Found ]{W}")
             print(f"{C}[*]{W} Extracting sitemap Links", end="", flush=True)
-            sm_page = sm_rqst.content
+            sm_page = await sm_rqst.read()
             sm_soup = bs4.BeautifulSoup(sm_page, "xml")
             links = sm_soup.find_all("loc")
             for url in links:
@@ -176,19 +265,16 @@ async def sitemap(target_url, sm_total, data, output):
                 if url is not None:
                     sm_total.append(url)
 
-            sm_total = set(sm_total)
+            sm_total[:] = list(set(sm_total))
             print(f"{G}{'['.rjust(7, '.')} {len(sm_total)} ]{W}")
             exporter(data, output, sm_total, "sitemap")
         elif sm_sc == 404:
             print(f"{R}{'['.rjust(8, '.')} Not Found ]{W}")
         else:
             print(f"{R}{'['.rjust(8, '.')} Status Code : {sm_sc} ]{W}")
-    except Exception as exc:
-        print(f"\n{R}[-]{W} Exception : {exc}")
-        log_writer(f"[crawler.sitemap] Exception = {exc}")
 
 
-async def css(target, css_total, data, soup, output):
+def css(target, css_total, data, soup, output):
     print(f"{C}[*]{W} Extracting CSS Links", end="", flush=True)
     css_links = soup.find_all("link", href=True)
 
@@ -197,12 +283,12 @@ async def css(target, css_total, data, soup, output):
         if url is not None and ".css" in url:
             css_total.append(url_filter(target, url))
 
-    css_total = set(css_total)
+    css_total[:] = list(set(css_total))
     print(f"{G}{'['.rjust(11, '.')} {len(css_total)} ]{W}")
     exporter(data, output, css_total, "css")
 
 
-async def js_scan(target, js_total, data, soup, output):
+def js_scan(target, js_total, data, soup, output):
     print(f"{C}[*]{W} Extracting Javascript Links", end="", flush=True)
     scr_tags = soup.find_all("script", src=True)
 
@@ -213,12 +299,12 @@ async def js_scan(target, js_total, data, soup, output):
             if tmp_url is not None:
                 js_total.append(tmp_url)
 
-    js_total = set(js_total)
+    js_total[:] = list(set(js_total))
     print(f"{G}{'['.rjust(4, '.')} {len(js_total)} ]{W}")
     exporter(data, output, js_total, "javascripts")
 
 
-async def internal_links(target, int_total, data, soup, output):
+def internal_links(target, int_total, data, soup, output):
     print(f"{C}[*]{W} Extracting Internal Links", end="", flush=True)
 
     ext = tldextract.extract(target)
@@ -231,12 +317,12 @@ async def internal_links(target, int_total, data, soup, output):
             if domain in url:
                 int_total.append(url)
 
-    int_total = set(int_total)
+    int_total[:] = list(set(int_total))
     print(f"{G}{'['.rjust(6, '.')} {len(int_total)} ]{W}")
     exporter(data, output, int_total, "internal_urls")
 
 
-async def external_links(target, ext_total, data, soup, output):
+def external_links(target, ext_total, data, soup, output):
     print(f"{C}[*]{W} Extracting External Links", end="", flush=True)
 
     ext = tldextract.extract(target)
@@ -249,12 +335,12 @@ async def external_links(target, ext_total, data, soup, output):
             if domain not in url and "http" in url:
                 ext_total.append(url)
 
-    ext_total = set(ext_total)
+    ext_total[:] = list(set(ext_total))
     print(f"{G}{'['.rjust(6, '.')} {len(ext_total)} ]{W}")
     exporter(data, output, ext_total, "external_urls")
 
 
-async def images(target, img_total, data, soup, output):
+def images(target, img_total, data, soup, output):
     print(f"{C}[*]{W} Extracting Images", end="", flush=True)
     image_tags = soup.find_all("img")
 
@@ -263,24 +349,27 @@ async def images(target, img_total, data, soup, output):
         if url is not None and len(url) > 1:
             img_total.append(url_filter(target, url))
 
-    img_total = set(img_total)
+    img_total[:] = list(set(img_total))
     print(f"{G}{'['.rjust(14, '.')} {len(img_total)} ]{W}")
     exporter(data, output, img_total, "images")
 
 
-async def sm_crawl(data, sm_crawl_total, sm_total, sm_url, output):
+async def sm_crawl(session, data, sm_crawl_total, sm_total, sm_url, output):
     print(f"{C}[*]{W} Crawling Sitemaps", end="", flush=True)
 
-    threads = []
+    urls = [
+        site_url
+        for site_url in sm_total
+        if site_url != sm_url and site_url.endswith("xml") is True
+    ]
 
-    def fetch(site_url):
-        try:
-            sm_rqst = requests.get(
-                site_url, headers=user_agent, verify=False, timeout=10
-            )
-            sm_sc = sm_rqst.status_code
+    async def fetch(site_url):
+        async with _open(session, site_url) as sm_rqst:
+            if sm_rqst is None:
+                return
+            sm_sc = sm_rqst.status
             if sm_sc == 200:
-                sm_data = sm_rqst.content.decode()
+                sm_data = await sm_rqst.text()
                 sm_soup = bs4.BeautifulSoup(sm_data, "xml")
                 links = sm_soup.find_all("loc")
                 for url in links:
@@ -288,42 +377,30 @@ async def sm_crawl(data, sm_crawl_total, sm_total, sm_url, output):
                     if url is not None:
                         sm_crawl_total.append(url)
             elif sm_sc == 404:
-                # print(R + '['.rjust(8, '.') + ' Not Found ]' + W)
                 pass
             else:
-                # print(R + '['.rjust(8, '.') + ' {} ]'.format(sm_sc) + W)
                 pass
-        except Exception as exc:
-            # print(f'\n{R}[-] Exception : {C}{exc}{W}')
-            log_writer(f"[crawler.sm_crawl] Exception = {exc}")
 
-    for site_url in sm_total:
-        if site_url != sm_url:
-            if site_url.endswith("xml") is True:
-                task = threading.Thread(target=fetch, args=[site_url])
-                task.daemon = True
-                threads.append(task)
-                task.start()
+    if urls:
+        await asyncio.gather(*(fetch(site_url) for site_url in urls))
 
-    for thread in threads:
-        thread.join()
-
-    sm_crawl_total = set(sm_crawl_total)
+    sm_crawl_total[:] = list(set(sm_crawl_total))
     print(f"{G}{'['.rjust(14, '.')} {len(sm_crawl_total)} ]{W}")
     exporter(data, output, sm_crawl_total, "urls_inside_sitemap")
 
 
-async def js_crawl(data, js_crawl_total, js_total, output):
+async def js_crawl(session, data, js_crawl_total, js_total, output):
     print(f"{C}[*]{W} Crawling Javascripts", end="", flush=True)
 
-    threads = []
+    urls = list(js_total)
 
-    def fetch(js_url):
-        try:
-            js_rqst = requests.get(js_url, headers=user_agent, verify=False, timeout=10)
-            js_sc = js_rqst.status_code
+    async def fetch(js_url):
+        async with _open(session, js_url) as js_rqst:
+            if js_rqst is None:
+                return
+            js_sc = js_rqst.status
             if js_sc == 200:
-                js_data = js_rqst.content.decode()
+                js_data = await js_rqst.text()
                 js_data = js_data.split(";")
                 for line in js_data:
                     if any(["http://" in line, "https://" in line]):
@@ -331,20 +408,11 @@ async def js_crawl(data, js_crawl_total, js_total, output):
                         for item in found:
                             if len(item) > 8:
                                 js_crawl_total.append(item)
-        except Exception as exc:
-            # print(f'\n{R}[-] Exception : {C}{exc}{W}')
-            log_writer(f"[crawler.js_crawl] Exception = {exc}")
 
-    for js_url in js_total:
-        task = threading.Thread(target=fetch, args=[js_url])
-        task.daemon = True
-        threads.append(task)
-        task.start()
+    if urls:
+        await asyncio.gather(*(fetch(js_url) for js_url in urls))
 
-    for thread in threads:
-        thread.join()
-
-    js_crawl_total = set(js_crawl_total)
+    js_crawl_total[:] = list(set(js_crawl_total))
     print(f"{G}{'['.rjust(11, '.')} {len(js_crawl_total)} ]{W}")
     exporter(data, output, js_crawl_total, "urls_inside_js")
 

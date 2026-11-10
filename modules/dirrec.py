@@ -96,35 +96,41 @@ async def consumer(
     global count
     while True:
         values = await queue.get()
-        if stop_event.is_set():
-            queue.task_done()
-            continue
-        url = values[0]
-        redir = values[1]
-        dir_len = values[2]
-        status, content_type, content_len, location = await fetch(url, session, redir)
-        if status is not None:
-            await filter_out(
-                target,
-                url,
-                status,
-                content_type,
-                content_len,
-                location,
-                use_cont_len,
-                dir_in_content,
-                dir_len,
-                exist_len,
-                exist_location,
+        try:
+            if stop_event.is_set():
+                continue
+            url = values[0]
+            redir = values[1]
+            dir_len = values[2]
+            status, content_type, content_len, location = await fetch(
+                url, session, redir
             )
-        queue.task_done()
-        count += 1
+            if status is not None:
+                await filter_out(
+                    target,
+                    url,
+                    status,
+                    content_type,
+                    content_len,
+                    location,
+                    use_cont_len,
+                    dir_in_content,
+                    dir_len,
+                    exist_len,
+                    exist_location,
+                )
+            count += 1
 
-        print(
-            f"\r\033[K{C}[*]{W} Requests : {count}/{total_num_words}",
-            end="\r",
-            flush=True,
-        )
+            print(
+                f"\r\033[K{C}[*]{W} Requests : {count}/{total_num_words}",
+                end="\r",
+                flush=True,
+            )
+        except Exception as exc:
+            exc_count += 1
+            log_writer(f"[dirrec.consumer] Exception : {exc}")
+        finally:
+            queue.task_done()
 
 
 async def run(target, threads, tout, wdlist, redir, sslv, filext, total_num_words):
@@ -133,7 +139,14 @@ async def run(target, threads, tout, wdlist, redir, sslv, filext, total_num_word
     len_test_res = []
     queue = asyncio.Queue(maxsize=threads)
 
-    conn = aiohttp.TCPConnector(limit=threads, family=socket.AF_INET, verify_ssl=sslv)
+    conn = aiohttp.TCPConnector(
+        limit=threads,
+        limit_per_host=threads,
+        family=socket.AF_INET,
+        ssl=sslv,
+        ttl_dns_cache=300,
+        enable_cleanup_closed=True,
+    )
     timeout = aiohttp.ClientTimeout(total=tout, sock_connect=tout, sock_read=tout)
     async with aiohttp.ClientSession(connector=conn, timeout=timeout) as session:
         print(f"{C}[*]{W} Probing for phantom URLs...")
@@ -188,12 +201,16 @@ async def run(target, threads, tout, wdlist, redir, sslv, filext, total_num_word
             for _ in range(threads)
         ]
 
-        await asyncio.gather(distrib)
-        await queue.join()
-        print()
-
-        for worker in workers:
-            worker.cancel()
+        try:
+            await asyncio.gather(distrib)
+            await queue.join()
+            print()
+        finally:
+            # Always tear down workers so the shared session/connector can close
+            # cleanly instead of leaking open sockets.
+            for worker in workers:
+                worker.cancel()
+            await asyncio.gather(*workers, return_exceptions=True)
 
 
 def normalize_location(location):
@@ -318,11 +335,13 @@ def hammer(target, threads, tout, wdlist, redir, sslv, output, data, filext):
     else:
         total_num_words = num_words
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(
-        run(target, threads, tout, wdlist, redir, sslv, filext, total_num_words)
-    )
-    dir_output(output, data)
-    loop.close()
-    log_writer("[dirrec] Completed")
+    # asyncio.run() owns the event-loop lifecycle: it drives aiohttp's background
+    # socket-cleanup to completion and closes the loop only afterwards, so idle/
+    # keep-alive sockets are terminated instead of being leaked by an early close().
+    try:
+        asyncio.run(
+            run(target, threads, tout, wdlist, redir, sslv, filext, total_num_words)
+        )
+        dir_output(output, data)
+    finally:
+        log_writer("[dirrec] Completed")
